@@ -1,0 +1,55 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - govet        # go vet 检查
+    - errcheck     # 未处理的 error
+    - staticcheck  # 静态分析
+    - unused       # 未使用的代码
+    - revive       # 通用规范检查（替代 golint）
+    - gocritic     # 代码风格建议
+    - misspell     # 英文拼写
+    - whitespace   # 多余空行
+    - nolintlint   # 检查 nolint 指令是否规范
+
+  settings:
+    govet:
+      enable-all: true
+    revive:
+      rules:
+        - name: exported
+          arguments:
+            - disableStutteringCheck
+    misspell:
+      locale: US
+
+  exclusions:
+    rules:
+      - path: "_test\\.go"
+        linters:
+          - errcheck
+          - gocritic
+    paths:
+      - vendor
+      - third_party
+      - testdata
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+    goimports:
+      local-prefixes:
+        - github.com/hanzhuoxian/mall
+
+output:
+  formats:
+    text:
+      path: stdout
+      print-issued-lines: true
+      print-linter-name: true
+  show-stats: true
