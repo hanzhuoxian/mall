@@ -1,13 +1,16 @@
-package app
+package nflag
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io"
 	"strings"
 
 	"github.com/spf13/pflag"
 )
+
+const GlobalFlagSetName = "global"
 
 // NamedFlagSet is a wrapper around pflag.FlagSet
 type NamedFlagSets struct {
@@ -55,4 +58,18 @@ func PrintSections(w io.Writer, fss NamedFlagSets, cols int) {
 			fmt.Fprint(w, buf.String())
 		}
 	}
+}
+
+// WordSepNormalizeFunc changes all flags that contain "_" separators.
+func WordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
+	if strings.Contains(name, "_") {
+		return pflag.NormalizedName(strings.ReplaceAll(name, "_", "-"))
+	}
+	return pflag.NormalizedName(name)
+}
+
+// InitFlags normalizes, parses, then logs the command line flags.
+func InitFlags(flags *pflag.FlagSet) {
+	flags.SetNormalizeFunc(WordSepNormalizeFunc)
+	flags.AddGoFlagSet(flag.CommandLine)
 }

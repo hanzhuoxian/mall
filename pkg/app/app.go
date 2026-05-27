@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	cliflag "github.com/hanzhuoxian/mall/pkg/flag"
+	"github.com/hanzhuoxian/mall/pkg/nflag"
+	"github.com/hanzhuoxian/mall/pkg/term"
+	"github.com/hanzhuoxian/mall/pkg/version"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type App struct {
@@ -13,7 +16,7 @@ type App struct {
 	name        string
 	description string
 	options     CliOptions
-	RunFunc     RunFunc
+	runFunc     RunFunc
 	silence     bool
 	noVersion   bool
 	noConfig    bool
@@ -26,6 +29,9 @@ type App struct {
 // structure.
 type Option func(*App)
 
+// RunFunc defines the application's startup callback function.
+type RunFunc func(basename string) error
+
 // WithOptions defines the application's options.
 func WithOptions(opt CliOptions) Option {
 	return func(a *App) {
@@ -33,13 +39,10 @@ func WithOptions(opt CliOptions) Option {
 	}
 }
 
-// RunFunc defines the application's startup callback function.
-type RunFunc func(basename string) error
-
 // WithRunFunc defines the application's startup callback function.
 func WithRunFunc(runFunc RunFunc) Option {
 	return func(a *App) {
-		a.RunFunc = runFunc
+		a.runFunc = runFunc
 	}
 }
 
@@ -122,6 +125,7 @@ func (a *App) buildCommand() {
 	}
 
 	cmd.Flags().SortFlags = true
+	nflag.InitFlags(cmd.Flags())
 
 	if len(a.commands) > 0 {
 		for _, command := range a.commands {
@@ -130,11 +134,11 @@ func (a *App) buildCommand() {
 		cmd.SetHelpCommand(helpCommand(basename))
 	}
 
-	if a.RunFunc != nil {
+	if a.runFunc != nil {
 		cmd.RunE = a.runCommand
 	}
 
-	var namedFlagSet cliflag.NamedFlagSets
+	var namedFlagSet nflag.NamedFlagSets
 	if a.options != nil {
 		namedFlagSet = a.options.Flags()
 		fs := cmd.Flags()
@@ -142,6 +146,18 @@ func (a *App) buildCommand() {
 			fs.AddFlagSet(f)
 		}
 	}
+	if !a.noVersion {
+		version.AddFlags(namedFlagSet.FlagSet(nflag.GlobalFlagSetName))
+	}
+
+	if !a.noConfig {
+		AddConfigFlag(basename, namedFlagSet.FlagSet(nflag.GlobalFlagSetName))
+	}
+
+	nflag.AddGlobalFlags(namedFlagSet.FlagSet(nflag.GlobalFlagSetName), cmd.Name())
+	cmd.Flags().AddFlagSet(namedFlagSet.FlagSet(nflag.GlobalFlagSetName))
+
+	addCmdTemplate(&cmd, namedFlagSet)
 
 	a.cmd = &cmd
 }
@@ -160,5 +176,56 @@ func (a *App) Run() {
 }
 
 func (a *App) runCommand(cmd *cobra.Command, args []string) error {
+	if !a.noVersion {
+		version.PrintAndExitIfRequested()
+	}
+
+	if !a.noConfig {
+		if err := viper.BindPFlags(cmd.Flags()); err != nil {
+			return err
+		}
+		if err := viper.Unmarshal(&a.options); err != nil {
+			return err
+		}
+	}
+	if a.options != nil {
+		if err := a.applyOptionRules(); err != nil {
+			return err
+		}
+	}
+	if a.runFunc != nil {
+		return a.runFunc(a.basename)
+	}
+
 	return nil
+}
+
+func (a *App) applyOptionRules() error {
+	if completeableOptions, ok := a.options.(CompleteableOptions); ok {
+		if err := completeableOptions.Complete(); err != nil {
+			return err
+		}
+	}
+
+	if errs := a.options.Validate(); len(errs) != 0 {
+		return fmt.Errorf("invalid options: %v", errs)
+	}
+
+	return nil
+}
+
+func addCmdTemplate(cmd *cobra.Command, namedFlagSets nflag.NamedFlagSets) {
+	usageFmt := fmt.Sprintf("Usage:\n  %s\n\n", cmd.UseLine())
+	cols, _, _ := term.TerminalSize(cmd.OutOrStdout())
+
+	cmd.SetUsageFunc(func(cmd *cobra.Command) error {
+		fmt.Fprintf(cmd.OutOrStderr(), usageFmt, cmd.UseLine())
+		nflag.PrintSections(cmd.OutOrStderr(), namedFlagSets, cols)
+		return nil
+	})
+
+	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n"+usageFmt, cmd.Long, cmd.UseLine())
+		nflag.PrintSections(cmd.OutOrStdout(), namedFlagSets, cols)
+	})
 }

@@ -1,14 +1,12 @@
 package app
 
-import (
-	cliflag "github.com/hanzhuoxian/mall/pkg/flag"
-)
+import "github.com/hanzhuoxian/mall/pkg/nflag"
 
 // CliOptions defines flags for a particular type of component.
 type CliOptions interface {
 	// AddFlags adds flags to the specified FlagSet object.
 	// AddFlags(fs *pflag.FlagSet)
-	Flags() (fss cliflag.NamedFlagSets)
+	Flags() (fss nflag.NamedFlagSets)
 	Validate() []error
 }
 
