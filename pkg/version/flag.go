@@ -79,7 +79,7 @@ var versionFlag = Version(VersionFlagName, VersionFalse, "Print version informat
 
 // AddFlags adds the version flag to the given FlagSet.
 func AddFlags(fs *pflag.FlagSet) {
-	fs.AddFlag(fs.Lookup(VersionFlagName))
+	fs.AddFlag(pflag.Lookup(VersionFlagName))
 }
 
 // PrintAndExitIfRequested will check if the -version flag was passed
