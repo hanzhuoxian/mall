@@ -78,10 +78,10 @@ test:
 cover:
 	@$(MAKE) go.test.cover
 
-## build.multiarch: Build source code for multiple platforms. See option PLATFORMS.
-.PHONY: build.multiarch
-build.multiarch:
-	@$(MAKE) go.build.multiarch
+## build.multi: Build source code for multiple platforms. See option PLATFORMS.
+.PHONY: build.multi
+build.multi:
+	@$(MAKE) go.build.multi
 
 
 ## help: Show this help info.
