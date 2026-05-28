@@ -1,7 +1,10 @@
 package server
 
 import (
+	"context"
+	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/pprof"
@@ -10,6 +13,7 @@ import (
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
 	"github.com/hanzhuoxian/mall/pkg/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/sync/errgroup"
 )
 
 type APIServer struct {
@@ -22,7 +26,7 @@ type APIServer struct {
 	healthz                      bool
 	enableMetrics                bool
 	enableProfiling              bool
-	insecureServer, secureServer http.Server
+	insecureServer, secureServer *http.Server
 }
 
 func initAPIServer(s *APIServer) {
@@ -64,4 +68,77 @@ func (s *APIServer) InstallAPIs() {
 	s.GET("/version", func(c *gin.Context) {
 		c.JSON(http.StatusOK, version.Get())
 	})
+}
+
+func (s *APIServer) Run() error {
+	s.insecureServer = &http.Server{
+		Addr:    s.InsecureServingInfo.Address,
+		Handler: s,
+	}
+
+	var eg errgroup.Group
+
+	eg.Go(func() error {
+		if err := s.insecureServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return err
+		}
+		return nil
+	})
+
+	if s.SecureServingInfo != nil {
+		s.secureServer = &http.Server{
+			Addr:    s.SecureServingInfo.Address(),
+			Handler: s,
+		}
+		eg.Go(func() error {
+			if err := s.secureServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				return err
+			}
+			return nil
+		})
+	}
+
+	// Ping the server to make sure the router is working.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if s.healthz {
+		if err := s.ping(ctx); err != nil {
+			return err
+		}
+	}
+
+	if err := eg.Wait(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *APIServer) ping(ctx context.Context) error {
+	addr := s.InsecureServingInfo.Address
+	if strings.HasPrefix(addr, "0.0.0.0:") {
+		addr = "127.0.0.1:" + addr[len("0.0.0.0:"):]
+	}
+	url := "http://" + addr + "/healthz"
+
+	for {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return err
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				return nil
+			}
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(1 * time.Second):
+		}
+	}
 }

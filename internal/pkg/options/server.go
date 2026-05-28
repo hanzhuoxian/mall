@@ -9,7 +9,7 @@ import (
 type ServerRunOptions struct {
 	Mode        string   `json:"mode"        mapstructure:"mode"`
 	Healthz     bool     `json:"healthz"     mapstructure:"healthz"`
-	Middlewares []string `json:"sj" mapstructure:"middlewares"`
+	Middlewares []string `json:"middlewares" mapstructure:"middlewares"`
 }
 
 func NewServerOptions() *ServerRunOptions {
@@ -28,14 +28,13 @@ func (s *ServerRunOptions) ApplyTo(c *server.Config) error {
 	return nil
 }
 
-func (o *ServerRunOptions) Validate() []error {
+func (s *ServerRunOptions) Validate() []error {
 	var errors []error
 	return errors
 }
 
-func (s *ServerRunOptions) Flags() (fs pflag.FlagSet) {
+func (s *ServerRunOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&s.Mode, "server.mode", s.Mode, "server mode, Supported server mode: debug, test, release")
 	fs.BoolVar(&s.Healthz, "server.healthz", s.Healthz, "enable healthz")
 	fs.StringSliceVar(&s.Middlewares, "server.middlewares", s.Middlewares, "server middlewares")
-	return
 }

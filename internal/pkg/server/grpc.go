@@ -12,6 +12,10 @@ type GRPCServer struct {
 	address string
 }
 
+func NewGRPCServer(addr string, opts ...grpc.ServerOption) *GRPCServer {
+	return &GRPCServer{Server: grpc.NewServer(opts...), address: addr}
+}
+
 func (g *GRPCServer) Run() error {
 	listen, err := net.Listen("tcp", g.address)
 	if err != nil {

@@ -11,5 +11,5 @@ func Run(cfg *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("failed to create server: %v", err)
 	}
-	return server.Run()
+	return server.PrepareRun().Run()
 }

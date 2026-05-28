@@ -54,7 +54,7 @@ type JwtInfo struct {
 func NewConfig() *Config {
 	return &Config{
 		Healthz:         true,
-		Mode:            gin.ReleaseMode,
+		Mode:            gin.DebugMode,
 		Middlewares:     []string{},
 		EnableProfiling: true,
 		EnableMetrics:   true,
@@ -70,7 +70,7 @@ type CompletedConfig struct {
 	*Config
 }
 
-func Complete(cfg *Config) CompletedConfig {
+func (cfg *Config) Complete() CompletedConfig {
 	return CompletedConfig{cfg}
 }
 

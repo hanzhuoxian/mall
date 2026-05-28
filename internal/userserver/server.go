@@ -3,32 +3,100 @@ package userserver
 import (
 	"fmt"
 
-	pkgserver "github.com/hanzhuoxian/mall/internal/pkg/server"
+	"github.com/hanzhuoxian/mall/internal/pkg/options"
+	"github.com/hanzhuoxian/mall/internal/pkg/server"
 	"github.com/hanzhuoxian/mall/internal/userserver/config"
+	"google.golang.org/grpc"
 )
 
-type server struct {
-	grpcServer *pkgserver.GRPCServer
-	apiServer  *pkgserver.APIServer
+type userServer struct {
+	grpcServer *server.GRPCServer
+	apiServer  *server.APIServer
 }
 
-func createServer(cfg *config.Config) (*server, error) {
+type preparedUserServer struct {
+	*userServer
+}
+
+type ExtraConfig struct {
+	Addr           string
+	MaxMessageSize int
+	mysqlOptions   options.MySQLOptions
+}
+
+func createServer(cfg *config.Config) (*userServer, error) {
 	c, err := buildConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-	c.Mode()
-	return &server{}, nil
-}
-func (s *server) Run() error {
-	fmt.Println("hello user server!")
-	return nil
+	apiServer, err := c.Complete().New()
+	if err != nil {
+		return nil, err
+	}
+
+	ec, err := buildExtraConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	grpcServer, err := ec.Complete().New()
+	if err != nil {
+		return nil, err
+	}
+
+	return &userServer{
+		apiServer:  apiServer,
+		grpcServer: grpcServer,
+	}, nil
 }
 
-func buildConfig(cfg *config.Config) (c *pkgserver.Config, lastErr error) {
-	c = pkgserver.NewConfig()
+func (u *userServer) PrepareRun() *preparedUserServer {
+	return &preparedUserServer{u}
+}
+
+func (p preparedUserServer) Run() error {
+	go p.grpcServer.Run()
+
+	return p.apiServer.Run()
+}
+
+func buildConfig(cfg *config.Config) (c *server.Config, lastErr error) {
+	c = server.NewConfig()
 	if lastErr = cfg.ServerRunOptions.ApplyTo(c); lastErr != nil {
 		return
 	}
+	if lastErr = cfg.InsecureServingOptions.ApplyTo(c); lastErr != nil {
+		return
+	}
 	return
+}
+
+func buildExtraConfig(cfg *config.Config) (*ExtraConfig, error) {
+	return &ExtraConfig{
+		Addr:           fmt.Sprintf("%s:%d", cfg.GRPCOptions.BindAddress, cfg.GRPCOptions.BindPort),
+		MaxMessageSize: cfg.GRPCOptions.MaxMsgSize,
+	}, nil
+}
+
+type completedExtraConfig struct {
+	*ExtraConfig
+}
+
+func (e *ExtraConfig) Complete() *completedExtraConfig {
+	if e.Addr == "" {
+		e.Addr = "127.0.0.1:8081"
+	}
+
+	return &completedExtraConfig{e}
+}
+
+func (ce *completedExtraConfig) New() (*server.GRPCServer, error) {
+	opts := []grpc.ServerOption{}
+	if ce.MaxMessageSize > 0 {
+		opts = append(opts,
+			grpc.MaxRecvMsgSize(ce.MaxMessageSize),
+			grpc.MaxSendMsgSize(ce.MaxMessageSize),
+		)
+	}
+	return server.NewGRPCServer(ce.Addr, opts...), nil
 }
