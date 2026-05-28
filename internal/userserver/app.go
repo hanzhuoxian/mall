@@ -4,6 +4,7 @@ import (
 	"github.com/hanzhuoxian/mall/internal/userserver/config"
 	"github.com/hanzhuoxian/mall/internal/userserver/options"
 	"github.com/hanzhuoxian/mall/pkg/app"
+	"github.com/hanzhuoxian/mall/pkg/log"
 )
 
 const commandDesc = `The mall user server validates and configures data
@@ -26,6 +27,8 @@ func NewApp(basename string) *app.App {
 
 func run(opts *options.Options) app.RunFunc {
 	return func(basename string) error {
+		log.Init(opts.LogOptions)
+		defer log.Flush()
 
 		cfg := config.CreateConfigFromOptions(opts)
 		return Run(cfg)

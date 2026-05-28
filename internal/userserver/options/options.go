@@ -3,6 +3,7 @@ package options
 import (
 	pkgoptions "github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/pkg/server"
+	"github.com/hanzhuoxian/mall/pkg/log"
 	"github.com/hanzhuoxian/mall/pkg/nflag"
 )
 
@@ -11,6 +12,7 @@ type Options struct {
 	MySQLOptions           *pkgoptions.MySQLOptions
 	GRPCOptions            *pkgoptions.GRPCOptions
 	InsecureServingOptions *pkgoptions.InsecureServingOptions
+	LogOptions             *log.Options
 }
 
 func NewOptions() *Options {

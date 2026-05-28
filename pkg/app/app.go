@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hanzhuoxian/mall/pkg/log"
 	"github.com/hanzhuoxian/mall/pkg/nflag"
 	"github.com/hanzhuoxian/mall/pkg/term"
 	"github.com/hanzhuoxian/mall/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+var progressMessage = "==>"
 
 type App struct {
 	basename    string
@@ -114,6 +117,7 @@ func NewApp(name string, basename string, opts ...Option) *App {
 }
 
 func (a *App) buildCommand() {
+	printWorkingDir()
 	basename := FormatBaseName(a.basename)
 	cmd := cobra.Command{
 		Use:           basename,
@@ -160,6 +164,11 @@ func (a *App) buildCommand() {
 	addCmdTemplate(&cmd, namedFlagSet)
 
 	a.cmd = &cmd
+}
+
+func printWorkingDir() {
+	wd, _ := os.Getwd()
+	log.Infof("%v WorkingDir: %s", progressMessage, wd)
 }
 
 // Command returns cobra command instance inside the application.
