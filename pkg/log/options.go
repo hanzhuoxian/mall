@@ -43,7 +43,7 @@ func NewOptions() (o *Options) {
 		Level:             zapcore.InfoLevel.String(),
 		DisableCaller:     false,
 		DisableStacktrace: false,
-		Format:            jsonFormat,
+		Format:            consoleFormat,
 		EnableColor:       false,
 		Development:       false,
 		OutputPaths:       []string{"stdout"},

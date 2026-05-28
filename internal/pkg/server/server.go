@@ -42,7 +42,7 @@ func (s *APIServer) Setup() {
 func (s *APIServer) InstallMiddlewares() {
 	s.Use(gin.Recovery())
 	s.Use(requestid.New())
-
+	s.Use(middleware.Context())
 	for _, m := range s.middlewares {
 		if mv, ok := middleware.Middlewares[m]; ok {
 			s.Use(mv)
