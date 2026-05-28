@@ -11,6 +11,7 @@ import (
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
+	"github.com/hanzhuoxian/mall/pkg/log"
 	"github.com/hanzhuoxian/mall/pkg/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
@@ -140,5 +141,19 @@ func (s *APIServer) ping(ctx context.Context) error {
 			return ctx.Err()
 		case <-time.After(1 * time.Second):
 		}
+	}
+}
+
+func (s *APIServer) Close() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+	defer cancel()
+
+	if err := s.secureServer.Shutdown(ctx); err != nil {
+		log.Warnf("Shutdown secure server failed: %s", err.Error())
+	}
+
+	if err := s.insecureServer.Shutdown(ctx); err != nil {
+		log.Warnf("Shutdown insecure server failed: %s", err.Error())
 	}
 }

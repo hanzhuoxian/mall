@@ -6,10 +6,12 @@ import (
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/pkg/server"
 	"github.com/hanzhuoxian/mall/internal/userserver/config"
+	"github.com/hanzhuoxian/mall/pkg/shutdown"
 	"google.golang.org/grpc"
 )
 
 type userServer struct {
+	gs         *shutdown.GracefulShutdown
 	grpcServer *server.GRPCServer
 	apiServer  *server.APIServer
 }
@@ -25,6 +27,10 @@ type ExtraConfig struct {
 }
 
 func createServer(cfg *config.Config) (*userServer, error) {
+	gs := shutdown.New()
+
+	gs.AddShutdownManager(shutdown.NewPosixSignalManager())
+
 	c, err := buildConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -45,12 +51,19 @@ func createServer(cfg *config.Config) (*userServer, error) {
 	}
 
 	return &userServer{
+		gs:         gs,
 		apiServer:  apiServer,
 		grpcServer: grpcServer,
 	}, nil
 }
 
 func (u *userServer) PrepareRun() *preparedUserServer {
+
+	u.gs.AddShutdownCallback(shutdown.ShutdownFunc(func(s string) error {
+		u.apiServer.Close()
+		u.grpcServer.Close()
+		return nil
+	}))
 	return &preparedUserServer{u}
 }
 
