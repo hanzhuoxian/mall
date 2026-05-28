@@ -26,17 +26,15 @@ func helpCommand(name string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "help [command]",
 		Short: "Help about any command",
-		Long: `Help provides help for any command in the application.
-Simply type ` + name + ` help [path to command] for full details.`,
-		Run: func(c *cobra.Command, args []string) {
-			cmd, _, e := c.Root().Find(args)
-			if cmd == nil || e != nil {
+		Long:  fmt.Sprintf("Help provides help for any command in the application.\nSimply type %s help [path to command] for full details.", name),
+		RunE: func(c *cobra.Command, args []string) error {
+			cmd, _, err := c.Root().Find(args)
+			if cmd == nil || err != nil {
 				c.Printf("Unknown help topic %#q\n", args)
-				_ = c.Root().Usage()
-			} else {
-				cmd.InitDefaultHelpFlag() // make possible 'help' flag to be shown
-				_ = cmd.Help()
+				return c.Root().Usage()
 			}
+			cmd.InitDefaultHelpFlag()
+			return cmd.Help()
 		},
 	}
 }

@@ -29,7 +29,8 @@ func (o *Options) ApplyTo(c *server.Config) error {
 func (o *Options) Flags() (nfs nflag.NamedFlagSets) {
 	o.ServerRunOptions.AddFlags(nfs.FlagSet("server"))
 	o.GRPCOptions.AddFlags(nfs.FlagSet("grpc"))
-	o.MySQLOptions.AddFlags(*nfs.FlagSet("mysql"))
+	o.MySQLOptions.AddFlags(nfs.FlagSet("mysql"))
+	o.InsecureServingOptions.AddFlags(nfs.FlagSet("insecure serving"))
 	return nfs
 }
 

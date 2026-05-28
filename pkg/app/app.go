@@ -215,17 +215,16 @@ func (a *App) applyOptionRules() error {
 }
 
 func addCmdTemplate(cmd *cobra.Command, namedFlagSets nflag.NamedFlagSets) {
-	usageFmt := fmt.Sprintf("Usage:\n  %s\n\n", cmd.UseLine())
-	cols, _, _ := term.TerminalSize(cmd.OutOrStdout())
-
 	cmd.SetUsageFunc(func(cmd *cobra.Command) error {
-		fmt.Fprintf(cmd.OutOrStderr(), usageFmt, cmd.UseLine())
+		cols, _, _ := term.TerminalSize(cmd.OutOrStderr())
+		fmt.Fprintf(cmd.OutOrStderr(), "Usage:\n  %s\n\n", cmd.UseLine())
 		nflag.PrintSections(cmd.OutOrStderr(), namedFlagSets, cols)
 		return nil
 	})
 
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n"+usageFmt, cmd.Long, cmd.UseLine())
+		cols, _, _ := term.TerminalSize(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), "%s\n\nUsage:\n  %s\n\n", cmd.Long, cmd.UseLine())
 		nflag.PrintSections(cmd.OutOrStdout(), namedFlagSets, cols)
 	})
 }

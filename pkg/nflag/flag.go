@@ -24,6 +24,7 @@ func (nfs *NamedFlagSets) FlagSet(name string) *pflag.FlagSet {
 		nfs.FlagSets = make(map[string]*pflag.FlagSet)
 	}
 	if nfs.FlagSets[name] == nil {
+		nfs.Order = append(nfs.Order, name)
 		nfs.FlagSets[name] = pflag.NewFlagSet(name, pflag.ExitOnError)
 	}
 	return nfs.FlagSets[name]

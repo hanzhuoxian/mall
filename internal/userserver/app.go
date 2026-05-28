@@ -15,6 +15,7 @@ func NewApp(basename string) *app.App {
 	a := app.NewApp(
 		"Mall User Server",
 		basename,
+		app.WithOptions(opts),
 		app.WithDescription(commandDesc),
 		app.WithDefaultValidArgs(),
 		app.WithRunFunc(run(opts)),

@@ -38,7 +38,7 @@ func (m *MySQLOptions) Validate() []error {
 	return err
 }
 
-func (m *MySQLOptions) AddFlags(fs pflag.FlagSet) {
+func (m *MySQLOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&m.Host, "mysql.host", m.Host, ""+
 		"MySQL service host address. If left blank, the following related mysql options will be ignored.")
 
