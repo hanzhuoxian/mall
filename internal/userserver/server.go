@@ -13,10 +13,22 @@ type server struct {
 }
 
 func createServer(cfg *config.Config) (*server, error) {
-
+	c, err := buildConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	c.Mode()
 	return &server{}, nil
 }
 func (s *server) Run() error {
 	fmt.Println("hello user server!")
 	return nil
+}
+
+func buildConfig(cfg *config.Config) (c *pkgserver.Config, lastErr error) {
+	c = pkgserver.NewConfig()
+	if lastErr = cfg.ServerRunOptions.ApplyTo(c); lastErr != nil {
+		return
+	}
+	return
 }
