@@ -21,8 +21,7 @@ func RegisterController(g *gin.Engine) {
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, "")
 		} else {
-			name, _ := u.GetUser(ctx, username)
-			ctx.JSON(http.StatusOK, name)
+			ctx.JSON(http.StatusOK, username)
 		}
 	})
 }
