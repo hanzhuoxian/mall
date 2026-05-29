@@ -108,6 +108,7 @@ func buildExtraConfig(cfg *config.Config) (*ExtraConfig, error) {
 		Addr:           fmt.Sprintf("%s:%d", cfg.GRPCOptions.BindAddress, cfg.GRPCOptions.BindPort),
 		MaxMessageSize: cfg.GRPCOptions.MaxMsgSize,
 		mysqlOptions:   *cfg.MySQLOptions,
+		redisOptions:   *cfg.RedisOptions,
 	}, nil
 }
 
@@ -131,9 +132,16 @@ func (ce *completedExtraConfig) New() (*server.GRPCServer, error) {
 			grpc.MaxSendMsgSize(ce.MaxMessageSize),
 		)
 	}
-	s, _ := mysql.GetMySQLFactoryOr(&ce.mysqlOptions)
+	s, err := mysql.GetMySQLFactoryOr(&ce.mysqlOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init mysql: %w", err)
+	}
 	store.Set(s)
-	c, _ := redis.GetCacheFactoryOr((&ce.redisOptions))
+
+	c, err := redis.GetCacheFactoryOr(&ce.redisOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init redis: %w", err)
+	}
 	cache.Set(c)
 
 	return server.NewGRPCServer(ce.Addr, opts...), nil

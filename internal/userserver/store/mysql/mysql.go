@@ -14,12 +14,16 @@ type datastore struct {
 }
 
 func (ds *datastore) Close() error {
-	db, err := ds.db.DB()
+	db := ds.db
+	if db == nil {
+		return nil
+	}
+	d, err := db.DB()
 
 	if err != nil {
 		return err
 	}
-	return db.Close()
+	return d.Close()
 }
 
 var (
@@ -36,12 +40,12 @@ func GetMySQLFactoryOr(opts *options.MySQLOptions) (store.Factory, error) {
 		var db *gorm.DB
 		db, err = opts.NewClient()
 		if err != nil {
-
+			return
 		}
 		mysqlFactory = &datastore{db}
 	})
 
-	if mysqlFactory == nil && err != nil {
+	if err != nil {
 		return nil, err
 	}
 	return mysqlFactory, nil

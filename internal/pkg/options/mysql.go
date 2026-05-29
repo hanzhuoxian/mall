@@ -53,7 +53,7 @@ func (m *MySQLOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&m.Database, "mysql.database", m.Database, ""+
 		"Database name for the server to use.")
 
-	fs.IntVar(&m.MaxIdleConnections, "mysql.max-idle-connections", m.MaxOpenConnections, ""+
+	fs.IntVar(&m.MaxIdleConnections, "mysql.max-idle-connections", m.MaxIdleConnections, ""+
 		"Maximum idle connections allowed to connect to mysql.")
 
 	fs.IntVar(&m.MaxOpenConnections, "mysql.max-open-connections", m.MaxOpenConnections, ""+

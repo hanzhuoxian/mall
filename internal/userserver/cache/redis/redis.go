@@ -33,10 +33,16 @@ func GetCacheFactoryOr(opts *options.RedisOptions) (f cache.Factory, err error) 
 	once.Do(func() {
 		var r redis.UniversalClient
 		r, err = opts.NewClient()
+		if err != nil {
+			return
+		}
 		cacheFactory = &cachestore{Client: r}
 	})
 
-	if cacheFactory == nil || err != nil {
+	if err != nil {
+		return nil, err
+	}
+	if cacheFactory == nil {
 		return nil, errors.New("create redis factory failed")
 	}
 

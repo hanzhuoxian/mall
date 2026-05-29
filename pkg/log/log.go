@@ -64,7 +64,7 @@ func handleFields(l *zap.Logger, args []any, additional ...zap.Field) []zap.Fiel
 	}
 
 	fields := make([]zap.Field, 0, len(args)/2+len(additional))
-	for i := 0; i < len(fields); {
+	for i := 0; i < len(args); {
 		if _, ok := args[i].(zap.Field); ok {
 			l.DPanic("strongly-typed Zap Field passed to logr", zap.Any("zap field", args[i]))
 

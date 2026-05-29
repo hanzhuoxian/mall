@@ -7,6 +7,7 @@
         "hanzhuoxian",
         "pflag",
         "nflag",
-        "mapstructure"
+        "mapstructure",
+        "gorm",
     ]
 }
