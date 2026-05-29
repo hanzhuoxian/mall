@@ -149,11 +149,15 @@ func (s *APIServer) Close() {
 
 	defer cancel()
 
-	if err := s.secureServer.Shutdown(ctx); err != nil {
-		log.Warnf("Shutdown secure server failed: %s", err.Error())
+	if s.secureServer != nil {
+		if err := s.secureServer.Shutdown(ctx); err != nil {
+			log.Warnf("Shutdown secure server failed: %s", err.Error())
+		}
 	}
 
-	if err := s.insecureServer.Shutdown(ctx); err != nil {
-		log.Warnf("Shutdown insecure server failed: %s", err.Error())
+	if s.insecureServer != nil {
+		if err := s.insecureServer.Shutdown(ctx); err != nil {
+			log.Warnf("Shutdown insecure server failed: %s", err.Error())
+		}
 	}
 }

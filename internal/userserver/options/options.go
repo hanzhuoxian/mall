@@ -13,6 +13,7 @@ type Options struct {
 	GRPCOptions            *pkgoptions.GRPCOptions
 	InsecureServingOptions *pkgoptions.InsecureServingOptions
 	LogOptions             *log.Options
+	RedisOptions           *pkgoptions.RedisOptions
 }
 
 func NewOptions() *Options {
@@ -21,6 +22,7 @@ func NewOptions() *Options {
 		MySQLOptions:           pkgoptions.NewMySQLOptions(),
 		GRPCOptions:            pkgoptions.NewGRPCOptions(),
 		InsecureServingOptions: pkgoptions.NewInsecureServingOptions(),
+		RedisOptions:           pkgoptions.NewRedisOptions(),
 	}
 }
 
@@ -33,6 +35,7 @@ func (o *Options) Flags() (nfs nflag.NamedFlagSets) {
 	o.GRPCOptions.AddFlags(nfs.FlagSet("grpc"))
 	o.MySQLOptions.AddFlags(nfs.FlagSet("mysql"))
 	o.InsecureServingOptions.AddFlags(nfs.FlagSet("insecure serving"))
+	o.RedisOptions.AddFlags(nfs.FlagSet("redis"))
 	return nfs
 }
 
@@ -42,5 +45,6 @@ func (o *Options) Validate() []error {
 	errs = append(errs, o.GRPCOptions.Validate()...)
 	errs = append(errs, o.MySQLOptions.Validate()...)
 	errs = append(errs, o.InsecureServingOptions.Validate()...)
+	errs = append(errs, o.RedisOptions.Validate()...)
 	return errs
 }

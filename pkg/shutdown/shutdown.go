@@ -38,16 +38,22 @@ type GracefulShutter interface {
 }
 
 type GracefulShutdown struct {
-	callbacks    []ShutdownCallback
-	managers     []ShutdownManager
-	errorHandler ErrorHandler
+	callbacks        []ShutdownCallback
+	managers         []ShutdownManager
+	errorHandler     ErrorHandler
+	shutdownFinished chan struct{}
 }
 
 func New() *GracefulShutdown {
 	return &GracefulShutdown{
-		callbacks: make([]ShutdownCallback, 0, 10),
-		managers:  make([]ShutdownManager, 0, 3),
+		callbacks:        make([]ShutdownCallback, 0, 10),
+		managers:         make([]ShutdownManager, 0, 3),
+		shutdownFinished: make(chan struct{}),
 	}
+}
+
+func (g *GracefulShutdown) Done() <-chan struct{} {
+	return g.shutdownFinished
 }
 
 func (g *GracefulShutdown) AddShutdownManager(manager ShutdownManager) {
@@ -78,7 +84,7 @@ func (g *GracefulShutdown) StartShutdown(sm ShutdownManager) {
 	for _, c := range g.callbacks {
 		wg.Add(1)
 		go func(c ShutdownCallback) {
-			wg.Done()
+			defer wg.Done()
 			g.ReportError(c.OnShutdown(sm.GetName()))
 		}(c)
 	}
@@ -86,6 +92,7 @@ func (g *GracefulShutdown) StartShutdown(sm ShutdownManager) {
 	wg.Wait()
 
 	g.ReportError(sm.ShutdownFinish())
+	close(g.shutdownFinished)
 }
 
 func (g *GracefulShutdown) ReportError(err error) {

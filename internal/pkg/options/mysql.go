@@ -3,9 +3,11 @@ package options
 import (
 	"time"
 
+	"github.com/hanzhuoxian/mall/internal/pkg/logger"
 	pkgdb "github.com/hanzhuoxian/mall/pkg/db"
 	"github.com/spf13/pflag"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 // MySQLOptions defines options for mysql database.
@@ -23,8 +25,8 @@ type MySQLOptions struct {
 func NewMySQLOptions() *MySQLOptions {
 	return &MySQLOptions{
 		Host:                  "127.0.0.1:3306",
-		Username:              "",
-		Password:              "",
+		Username:              "root",
+		Password:              "123456",
 		Database:              "",
 		MaxIdleConnections:    100,
 		MaxOpenConnections:    100,
@@ -75,6 +77,7 @@ func (o *MySQLOptions) NewClient() (*gorm.DB, error) {
 			MaxOpenConnections:    o.MaxOpenConnections,
 			MaxConnectionLifeTime: o.MaxConnectionLifeTime,
 			LogLevel:              o.LogLevel,
+			Logger:                logger.NewGormLogger(gormlogger.LogLevel(o.LogLevel)),
 		},
 	}
 

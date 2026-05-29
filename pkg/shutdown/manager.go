@@ -14,9 +14,7 @@ type PosixSignalManager struct {
 
 func NewPosixSignalManager(sig ...os.Signal) *PosixSignalManager {
 	if len(sig) == 0 {
-		sig = make([]os.Signal, 2)
-		sig[0] = os.Interrupt
-		sig[1] = syscall.SIGTERM
+		sig = []os.Signal{os.Interrupt, syscall.SIGTERM}
 	}
 
 	return &PosixSignalManager{signals: sig}
