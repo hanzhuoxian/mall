@@ -2,6 +2,7 @@ package cache
 
 type Factory interface {
 	User() UserCache
+	Close() error
 }
 
 var cache Factory

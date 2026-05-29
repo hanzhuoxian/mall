@@ -22,6 +22,10 @@ func (c *cachestore) User() cache.UserCache {
 	return &userCache{client: c.Client}
 }
 
+func (c *cachestore) Close() error {
+	return c.Client.Close()
+}
+
 func GetCacheFactoryOr(opts *options.RedisOptions) (f cache.Factory, err error) {
 	if opts == nil && cacheFactory == nil {
 		return nil, errors.New("get redis factory failed")

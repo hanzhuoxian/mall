@@ -65,6 +65,12 @@ func createServer(cfg *config.Config) (*userServer, error) {
 func (u *userServer) PrepareRun() *preparedUserServer {
 	initRouter(u.apiServer.Engine)
 	u.gs.AddShutdownCallback(shutdown.ShutdownFunc(func(s string) error {
+		if s, _ := mysql.GetMySQLFactoryOr(nil); s != nil {
+			s.Close()
+		}
+		if c, _ := redis.GetCacheFactoryOr(nil); c != nil {
+			c.Close()
+		}
 		u.apiServer.Close()
 		u.grpcServer.Close()
 		return nil
