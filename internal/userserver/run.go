@@ -7,9 +7,9 @@ import (
 )
 
 func Run(cfg *config.Config) error {
-	server, err := createServer(cfg)
+	srv, err := initUserServer(cfg)
 	if err != nil {
-		return fmt.Errorf("failed to create server: %v", err)
+		return fmt.Errorf("failed to init server: %w", err)
 	}
-	return server.PrepareRun().Run()
+	return srv.PrepareRun().Run()
 }

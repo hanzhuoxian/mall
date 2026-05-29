@@ -1,50 +1,34 @@
 package redis
 
 import (
-	"errors"
-	"sync"
+	"fmt"
 
+	"github.com/google/wire"
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/userserver/cache"
-	"github.com/redis/go-redis/v9"
+	goredis "github.com/redis/go-redis/v9"
 )
+
+// ProviderSet is used by Wire.
+var ProviderSet = wire.NewSet(NewCachestore)
 
 type cachestore struct {
-	Client redis.UniversalClient
+	client goredis.UniversalClient
 }
 
-var (
-	cacheFactory cache.Factory
-	once         sync.Once
-)
-
 func (c *cachestore) User() cache.UserCache {
-	return &userCache{client: c.Client}
+	return &userCache{client: c.client}
 }
 
 func (c *cachestore) Close() error {
-	return c.Client.Close()
+	return c.client.Close()
 }
 
-func GetCacheFactoryOr(opts *options.RedisOptions) (f cache.Factory, err error) {
-	if opts == nil && cacheFactory == nil {
-		return nil, errors.New("get redis factory failed")
-	}
-	once.Do(func() {
-		var r redis.UniversalClient
-		r, err = opts.NewClient()
-		if err != nil {
-			return
-		}
-		cacheFactory = &cachestore{Client: r}
-	})
-
+// NewCachestore creates a Redis-backed cache.Factory.
+func NewCachestore(opts *options.RedisOptions) (cache.Factory, error) {
+	r, err := opts.NewClient()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connect redis: %w", err)
 	}
-	if cacheFactory == nil {
-		return nil, errors.New("create redis factory failed")
-	}
-
-	return cacheFactory, nil
+	return &cachestore{client: r}, nil
 }

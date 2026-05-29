@@ -1,52 +1,35 @@
 package mysql
 
 import (
-	"errors"
-	"sync"
-
+	"github.com/google/wire"
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/userserver/store"
 	"gorm.io/gorm"
 )
+
+// ProviderSet is used by Wire.
+var ProviderSet = wire.NewSet(NewDatastore)
 
 type datastore struct {
 	db *gorm.DB
 }
 
 func (ds *datastore) Close() error {
-	db := ds.db
-	if db == nil {
+	if ds.db == nil {
 		return nil
 	}
-	d, err := db.DB()
-
+	d, err := ds.db.DB()
 	if err != nil {
 		return err
 	}
 	return d.Close()
 }
 
-var (
-	mysqlFactory store.Factory
-	once         sync.Once
-)
-
-func GetMySQLFactoryOr(opts *options.MySQLOptions) (store.Factory, error) {
-	if opts == nil && mysqlFactory == nil {
-		return nil, errors.New("failed to get mysql factory")
-	}
-	var err error
-	once.Do(func() {
-		var db *gorm.DB
-		db, err = opts.NewClient()
-		if err != nil {
-			return
-		}
-		mysqlFactory = &datastore{db}
-	})
-
+// NewDatastore creates a MySQL-backed store.Factory.
+func NewDatastore(opts *options.MySQLOptions) (store.Factory, error) {
+	db, err := opts.NewClient()
 	if err != nil {
-		return nil, err
+		// return nil, fmt.Errorf("connect mysql: %w", err)
 	}
-	return mysqlFactory, nil
+	return &datastore{db: db}, nil
 }
