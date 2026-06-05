@@ -1,6 +1,8 @@
 package userserver
 
 import (
+	"errors"
+
 	"github.com/hanzhuoxian/mall/internal/pkg/server"
 	"github.com/hanzhuoxian/mall/internal/userserver/cache"
 	"github.com/hanzhuoxian/mall/internal/userserver/controller"
@@ -42,11 +44,11 @@ func newUserServer(
 func (u *userServer) PrepareRun() *preparedUserServer {
 	initRouter(u.apiServer.Engine, u.controllers)
 	u.gs.AddShutdownCallback(shutdown.ShutdownFunc(func(s string) error {
-		u.storeFactory.Close()
-		u.cacheFactory.Close()
+		storeErr := u.storeFactory.Close()
+		cacheErr := u.cacheFactory.Close()
 		u.apiServer.Close()
-		u.grpcServer.Close()
-		return nil
+		grpcErr := u.grpcServer.Close()
+		return errors.Join(storeErr, cacheErr, grpcErr)
 	}))
 	return &preparedUserServer{u}
 }

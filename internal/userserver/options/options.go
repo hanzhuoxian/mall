@@ -8,12 +8,12 @@ import (
 )
 
 type Options struct {
-	ServerRunOptions       *pkgoptions.ServerRunOptions
-	MySQLOptions           *pkgoptions.MySQLOptions
-	GRPCOptions            *pkgoptions.GRPCOptions
-	InsecureServingOptions *pkgoptions.InsecureServingOptions
-	LogOptions             *log.Options
-	RedisOptions           *pkgoptions.RedisOptions
+	ServerRunOptions       *pkgoptions.ServerRunOptions       `json:"server" mapstructure:"server"`
+	MySQLOptions           *pkgoptions.MySQLOptions           `json:"server" mapstructure:"mysql"`
+	GRPCOptions            *pkgoptions.GRPCOptions            `json:"server" mapstructure:"grpc"`
+	InsecureServingOptions *pkgoptions.InsecureServingOptions `json:"server" mapstructure:"insecure"`
+	LogOptions             *log.Options                       `json:"server" mapstructure:"log"`
+	RedisOptions           *pkgoptions.RedisOptions           `json:"server" mapstructure:"redis"`
 }
 
 func NewOptions() *Options {

@@ -130,8 +130,9 @@ func (s *APIServer) ping(ctx context.Context) error {
 
 		resp, err := http.DefaultClient.Do(req)
 		if err == nil {
-			resp.Body.Close()
-			if resp.StatusCode == http.StatusOK {
+			ok := resp.StatusCode == http.StatusOK
+			_ = resp.Body.Close()
+			if ok {
 				return nil
 			}
 		}

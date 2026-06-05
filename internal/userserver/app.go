@@ -13,7 +13,7 @@ for the api objects The Server services REST operations to do the api objects ma
 
 func NewApp(basename string) *app.App {
 	opts := options.NewOptions()
-	a := app.NewApp(
+	return app.NewApp(
 		"Mall User Server",
 		basename,
 		app.WithOptions(opts),
@@ -22,7 +22,6 @@ func NewApp(basename string) *app.App {
 		app.WithRunFunc(run(opts)),
 		app.WithNoConfig(),
 	)
-	return a
 }
 
 func run(opts *options.Options) app.RunFunc {
