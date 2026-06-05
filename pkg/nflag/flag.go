@@ -1,3 +1,5 @@
+// Package nflag 在 pflag 基础上提供了命名分组 FlagSet（NamedFlagSets）能力，
+// 支持按分组顺序打印 flag 帮助信息并自适应终端宽度。
 package nflag
 
 import (
@@ -10,9 +12,10 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// GlobalFlagSetName 是全局通用 flag 分组的保留名称，version 和 config flag 默认注册到该分组。
 const GlobalFlagSetName = "global"
 
-// NamedFlagSet is a wrapper around pflag.FlagSet
+// NamedFlagSets 管理多个具名 pflag.FlagSet，Order 维护插入顺序以保证打印时顺序一致。
 type NamedFlagSets struct {
 	Order    []string
 	FlagSets map[string]*pflag.FlagSet

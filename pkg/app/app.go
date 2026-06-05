@@ -1,3 +1,5 @@
+// Package app 提供了构建 CLI 应用的通用框架，基于 cobra 封装了应用启动、子命令注册、
+// 配置文件加载、版本输出和 flag 分组展示等能力。
 package app
 
 import (
@@ -14,6 +16,8 @@ import (
 
 var progressMessage = "==>"
 
+// App 是 CLI 应用的核心结构，持有 cobra 根命令、子命令列表及所有运行时配置。
+// 通过 Option 函数式选项进行构建，不应直接初始化该结构体。
 type App struct {
 	basename    string
 	name        string
@@ -116,6 +120,7 @@ func NewApp(name string, basename string, opts ...Option) *App {
 	return app
 }
 
+// buildCommand 根据 App 配置组装 cobra.Command，注册子命令、flag 分组、版本和配置 flag。
 func (app *App) buildCommand() {
 	printWorkingDir()
 	basename := FormatBaseName(app.basename)
@@ -166,6 +171,7 @@ func (app *App) buildCommand() {
 	app.cmd = &cmd
 }
 
+// printWorkingDir 在启动时打印当前工作目录，便于排查路径相关问题。
 func printWorkingDir() {
 	wd, _ := os.Getwd()
 	log.Infof("%v WorkingDir: %s", progressMessage, wd)
@@ -184,6 +190,8 @@ func (a *App) Run() {
 	}
 }
 
+// runCommand 是 cobra 根命令的 RunE 实现，负责版本检查、配置绑定和选项校验，
+// 最终调用用户注册的 RunFunc。
 func (a *App) runCommand(cmd *cobra.Command, args []string) error {
 	if !a.noVersion {
 		version.PrintAndExitIfRequested()
@@ -209,6 +217,7 @@ func (a *App) runCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// applyOptionRules 依次执行 Complete（补全默认值）和 Validate（合法性校验）。
 func (a *App) applyOptionRules() error {
 	if completeableOptions, ok := a.options.(CompleteableOptions); ok {
 		if err := completeableOptions.Complete(); err != nil {
@@ -223,6 +232,7 @@ func (a *App) applyOptionRules() error {
 	return nil
 }
 
+// addCmdTemplate 替换 cobra 默认的 Usage/Help 模板，使 flag 按分组格式化输出并自适应终端宽度。
 func addCmdTemplate(cmd *cobra.Command, namedFlagSets nflag.NamedFlagSets) {
 	cmd.SetUsageFunc(func(cmd *cobra.Command) error {
 		cols, _, _ := term.TerminalSize(cmd.OutOrStderr())

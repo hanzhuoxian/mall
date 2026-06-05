@@ -7,6 +7,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// InfoLogger 提供 Info 级别日志能力，支持结构化字段、格式化字符串和键值对三种写法。
+// Enabled 可用于在写日志前判断当前级别是否开启，避免不必要的参数构造。
 type InfoLogger interface {
 	Info(msg string, fields ...Field)
 	Infof(fotmat string, v ...any)
@@ -15,6 +17,8 @@ type InfoLogger interface {
 	Enabled() bool
 }
 
+// Logger 是完整的日志接口，涵盖 Debug 到 Fatal 各级别，以及上下文集成、字段追加等能力。
+// 所有级别均提供三种变体：强类型 Field（性能最优）、格式化字符串（fmt 风格）、键值对（sugar 风格）。
 type Logger interface {
 	InfoLogger
 	Debug(msg string, fields ...Field)
@@ -58,6 +62,8 @@ type Logger interface {
 	Flush()
 }
 
+// handleFields 将键值对参数列表（keysAndValues）转换为 zap.Field 切片。
+// 若参数为奇数个或键不是 string 类型，会通过 DPanic 记录错误并提前终止转换。
 func handleFields(l *zap.Logger, args []any, additional ...zap.Field) []zap.Field {
 	if len(args) == 0 {
 		return additional
@@ -96,6 +102,8 @@ func handleFields(l *zap.Logger, args []any, additional ...zap.Field) []zap.Fiel
 	return fields
 }
 
+// zapLogger 是 Logger 接口的核心实现，组合了底层 zap.Logger 和 infoLogger。
+// infoLogger 负责带级别控制的 Info/Infof/Infow，zapLogger 负责其余级别及扩展方法。
 type zapLogger struct {
 	zapLogger *zap.Logger
 	infoLogger
@@ -103,6 +111,8 @@ type zapLogger struct {
 
 var _ Logger = &zapLogger{}
 
+// New 根据 Options 创建一个 zapLogger 实例，同时将标准库 log 重定向至该 logger。
+// opts 为 nil 时使用默认配置。
 func New(opts *Options) *zapLogger {
 	if opts == nil {
 		opts = NewOptions()
@@ -176,6 +186,7 @@ func (l *zapLogger) V(level Level) InfoLogger {
 	return disabledInfoLogger
 }
 
+// Write 实现 io.Writer 接口，将写入内容以 Info 级别记录，便于与标准库日志集成。
 func (l *zapLogger) Write(p []byte) (n int, err error) {
 	l.zapLogger.Info(string(p))
 
@@ -387,7 +398,8 @@ func (l *zapLogger) Fatalw(msg string, keysAndValues ...interface{}) {
 	l.zapLogger.Sugar().Fatalw(msg, keysAndValues...)
 }
 
-// L method output with specified context value.
+// L 从 context 中提取预设字段（requestID、username、watcherName）并附加到 logger，
+// 便于在链路追踪场景下自动携带请求元信息。
 func L(ctx context.Context) *zapLogger {
 	return std.L(ctx)
 }
@@ -411,6 +423,7 @@ func (l *zapLogger) L(ctx context.Context) *zapLogger {
 }
 
 //nolint:predeclared
+// clone 浅拷贝当前 logger，用于派生带额外字段的子 logger，避免修改原实例。
 func (l *zapLogger) clone() *zapLogger {
 	copy := *l
 

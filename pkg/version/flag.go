@@ -1,3 +1,5 @@
+// Package version 提供版本信息的构建、打印和 CLI flag 注册能力。
+// 版本变量（GitVersion、GitCommit 等）通常由构建系统通过 -ldflags 注入。
 package version
 
 import (
@@ -8,6 +10,8 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// versionValue 是 --version flag 的自定义类型，支持三种状态：
+// VersionFalse（未指定）、VersionTrue（格式化输出）、VersionRaw（Go 结构体 %#v 输出）。
 type versionValue int
 
 // 版本值的定义
@@ -75,6 +79,7 @@ func Version(name string, value versionValue, usage string) *versionValue {
 // VersionFlagName is the name of the version flag.
 const VersionFlagName = "version"
 
+// versionFlag 是全局 --version flag 实例，由 PrintAndExitIfRequested 读取。
 var versionFlag = Version(VersionFlagName, VersionFalse, "Print version information and quit")
 
 // AddFlags adds the version flag to the given FlagSet.

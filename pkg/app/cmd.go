@@ -54,6 +54,7 @@ func NewCommand(name string, usage string, desc string, options ...CommonOptions
 	return cmd
 }
 
+// cobraCommand 将 Command 转换为 cobra.Command，注册子命令、flag 和 help flag。
 func (c *Command) cobraCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   c.usage,
@@ -92,6 +93,7 @@ func (c *Command) AddCommands(commands ...*Command) {
 	c.commands = append(c.commands, commands...)
 }
 
+// runCommand 是子命令的 cobra Run 实现，执行失败时打印错误并以非零状态退出。
 func (c *Command) runCommand(cmd *cobra.Command, args []string) {
 	if c.runFunc == nil {
 		return

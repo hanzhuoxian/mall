@@ -1,3 +1,4 @@
+// Package term 提供终端尺寸查询工具，用于在 CLI 帮助信息输出时自适应终端宽度。
 package term
 
 import (

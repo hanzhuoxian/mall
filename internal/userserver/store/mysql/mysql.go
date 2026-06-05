@@ -1,6 +1,8 @@
 package mysql
 
 import (
+	"fmt"
+
 	"github.com/google/wire"
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/userserver/store"
@@ -29,7 +31,7 @@ func (ds *datastore) Close() error {
 func NewDatastore(opts *options.MySQLOptions) (store.Factory, error) {
 	db, err := opts.NewClient()
 	if err != nil {
-		// return nil, fmt.Errorf("connect mysql: %w", err)
+		return nil, fmt.Errorf("connect mysql: %w", err)
 	}
 	return &datastore{db: db}, nil
 }

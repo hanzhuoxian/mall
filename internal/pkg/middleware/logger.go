@@ -111,7 +111,6 @@ func LoggerWithConfig(conf gin.LoggerConfig) gin.HandlerFunc {
 			log.L(c).Info(formatter(param))
 		}
 	}
-
 }
 
 func GetLoggerConfig(formatter gin.LogFormatter, output io.Writer, skipPaths []string) gin.LoggerConfig {
