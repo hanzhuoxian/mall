@@ -102,59 +102,59 @@ func WithDefaultValidArgs() Option {
 // NewApp creates a new application instance based on the given application name,
 // binary name, and other options.
 func NewApp(name string, basename string, opts ...Option) *App {
-	a := &App{
+	app := &App{
 		name:     name,
 		basename: basename,
 	}
 
 	for _, o := range opts {
-		o(a)
+		o(app)
 	}
 
-	a.buildCommand()
+	app.buildCommand()
 
-	return a
+	return app
 }
 
-func (a *App) buildCommand() {
+func (app *App) buildCommand() {
 	printWorkingDir()
-	basename := FormatBaseName(a.basename)
+	basename := FormatBaseName(app.basename)
 	cmd := cobra.Command{
 		Use:           basename,
-		Short:         a.name,
-		Long:          a.description,
+		Short:         app.name,
+		Long:          app.description,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		Args:          a.args,
+		Args:          app.args,
 	}
 
 	cmd.Flags().SortFlags = true
 	nflag.InitFlags(cmd.Flags())
 
-	if len(a.commands) > 0 {
-		for _, command := range a.commands {
+	if len(app.commands) > 0 {
+		for _, command := range app.commands {
 			cmd.AddCommand(command.cobraCommand())
 		}
 		cmd.SetHelpCommand(helpCommand(basename))
 	}
 
-	if a.runFunc != nil {
-		cmd.RunE = a.runCommand
+	if app.runFunc != nil {
+		cmd.RunE = app.runCommand
 	}
 
 	var namedFlagSet nflag.NamedFlagSets
-	if a.options != nil {
-		namedFlagSet = a.options.Flags()
+	if app.options != nil {
+		namedFlagSet = app.options.Flags()
 		fs := cmd.Flags()
 		for _, f := range namedFlagSet.FlagSets {
 			fs.AddFlagSet(f)
 		}
 	}
-	if !a.noVersion {
+	if !app.noVersion {
 		version.AddFlags(namedFlagSet.FlagSet(nflag.GlobalFlagSetName))
 	}
 
-	if !a.noConfig {
+	if !app.noConfig {
 		AddConfigFlag(basename, namedFlagSet.FlagSet(nflag.GlobalFlagSetName))
 	}
 
@@ -163,7 +163,7 @@ func (a *App) buildCommand() {
 
 	addCmdTemplate(&cmd, namedFlagSet)
 
-	a.cmd = &cmd
+	app.cmd = &cmd
 }
 
 func printWorkingDir() {
