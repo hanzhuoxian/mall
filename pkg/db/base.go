@@ -11,11 +11,11 @@ import (
 
 // BaseOptions 是各数据库驱动共享的连接池与日志配置。
 type BaseOptions struct {
-	MaxIdleConnections    int            // 最大空闲连接数
-	MaxOpenConnections    int            // 最大打开连接数
-	MaxConnectionLifeTime time.Duration  // 连接最大存活时间，超时后自动回收
-	LogLevel              int            // GORM 日志级别（1=Silent, 2=Error, 3=Warn, 4=Info）
 	Logger                logger.Interface // 自定义日志实现，为 nil 时使用默认实现
+	MaxIdleConnections    int              // 最大空闲连接数
+	MaxOpenConnections    int              // 最大打开连接数
+	MaxConnectionLifeTime time.Duration    // 连接最大存活时间，超时后自动回收
+	LogLevel              int              // GORM 日志级别（1=Silent, 2=Error, 3=Warn, 4=Info）
 }
 
 // open 使用指定 dialector 和连接池配置打开数据库连接，是各驱动的公共创建入口。

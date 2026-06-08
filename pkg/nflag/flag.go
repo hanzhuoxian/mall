@@ -17,8 +17,8 @@ const GlobalFlagSetName = "global"
 
 // NamedFlagSets 管理多个具名 pflag.FlagSet，Order 维护插入顺序以保证打印时顺序一致。
 type NamedFlagSets struct {
-	Order    []string
 	FlagSets map[string]*pflag.FlagSet
+	Order    []string
 }
 
 // FlagSet returns a FlagSet with the given name
@@ -56,10 +56,10 @@ func PrintSections(w io.Writer, fss NamedFlagSets, cols int) {
 		if cols > 24 {
 			i := strings.Index(buf.String(), zzz)
 			lines := strings.Split(buf.String()[:i], "\n")
-			fmt.Fprint(w, strings.Join(lines[:len(lines)-1], "\n"))
-			fmt.Fprintln(w)
+			_, _ = fmt.Fprint(w, strings.Join(lines[:len(lines)-1], "\n"))
+			_, _ = fmt.Fprintln(w)
 		} else {
-			fmt.Fprint(w, buf.String())
+			_, _ = fmt.Fprint(w, buf.String())
 		}
 	}
 }

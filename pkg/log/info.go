@@ -10,8 +10,8 @@ import (
 // infoLogger 是带可配置级别的 InfoLogger 实现，被 zapLogger 内嵌用于支持 V() 按级别过滤。
 // 通过 zap.Logger.Check 预检查级别，在日志未开启时跳过格式化，减少无效开销。
 type infoLogger struct {
-	level zapcore.Level
 	log   *zap.Logger
+	level zapcore.Level
 }
 
 // Enabled 始终返回 true，表示该 infoLogger 对应的级别已开启（禁用时使用 noopInfoLogger）。

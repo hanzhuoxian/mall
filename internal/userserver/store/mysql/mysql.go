@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"github.com/google/wire"
+	"gorm.io/gorm"
+
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/userserver/store"
-	"gorm.io/gorm"
 )
 
 // ProviderSet is used by Wire.

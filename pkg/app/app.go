@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/hanzhuoxian/mall/pkg/log"
 	"github.com/hanzhuoxian/mall/pkg/nflag"
 	"github.com/hanzhuoxian/mall/pkg/term"
 	"github.com/hanzhuoxian/mall/pkg/version"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var progressMessage = "==>"
@@ -24,12 +25,12 @@ type App struct {
 	description string
 	options     CliOptions
 	runFunc     RunFunc
+	args        cobra.PositionalArgs
+	cmd         *cobra.Command
+	commands    []*Command
 	silence     bool
 	noVersion   bool
 	noConfig    bool
-	commands    []*Command
-	args        cobra.PositionalArgs
-	cmd         *cobra.Command
 }
 
 // Option defines optional parameters for initializing the application
@@ -236,14 +237,14 @@ func (a *App) applyOptionRules() error {
 func addCmdTemplate(cmd *cobra.Command, namedFlagSets nflag.NamedFlagSets) {
 	cmd.SetUsageFunc(func(cmd *cobra.Command) error {
 		cols, _, _ := term.TerminalSize(cmd.OutOrStderr())
-		fmt.Fprintf(cmd.OutOrStderr(), "Usage:\n  %s\n\n", cmd.UseLine())
+		_, _ = fmt.Fprintf(cmd.OutOrStderr(), "Usage:\n  %s\n\n", cmd.UseLine())
 		nflag.PrintSections(cmd.OutOrStderr(), namedFlagSets, cols)
 		return nil
 	})
 
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		cols, _, _ := term.TerminalSize(cmd.OutOrStdout())
-		fmt.Fprintf(cmd.OutOrStdout(), "%s\n\nUsage:\n  %s\n\n", cmd.Long, cmd.UseLine())
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s\n\nUsage:\n  %s\n\n", cmd.Long, cmd.UseLine())
 		nflag.PrintSections(cmd.OutOrStdout(), namedFlagSets, cols)
 	})
 }

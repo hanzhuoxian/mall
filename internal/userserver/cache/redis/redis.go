@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"github.com/google/wire"
+	goredis "github.com/redis/go-redis/v9"
+
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/userserver/cache"
-	goredis "github.com/redis/go-redis/v9"
 )
 
 // ProviderSet is used by Wire.

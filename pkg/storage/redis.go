@@ -12,16 +12,16 @@ import (
 // RedisOptions 包含 Redis 连接所需的配置项。
 // MasterName 非空时使用 Sentinel 模式；Addrs 多于一个时使用 Cluster 模式；否则为单节点模式。
 type RedisOptions struct {
-	Addrs        []string      // 节点地址列表，格式为 host:port
 	Username     string
 	Password     string
-	DB           int           // 数据库编号，Cluster 模式下无效
+	MasterName   string        // Sentinel 主节点名称，非空时启用 Sentinel 模式
+	Addrs        []string      // 节点地址列表，格式为 host:port
 	DialTimeout  time.Duration // 建立连接的超时时间
 	ReadTimeout  time.Duration // 读操作超时时间
 	WriteTimeout time.Duration // 写操作超时时间
+	DB           int           // 数据库编号，Cluster 模式下无效
 	PoolSize     int           // 每个节点的最大连接数
 	MinIdleConns int           // 每个节点维持的最小空闲连接数
-	MasterName   string        // Sentinel 主节点名称，非空时启用 Sentinel 模式
 }
 
 // NewRedis 创建并返回一个 Redis 通用客户端，初始化后会发送 PING 验证连通性。

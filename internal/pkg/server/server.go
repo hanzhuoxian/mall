@@ -10,35 +10,40 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
 	"github.com/hanzhuoxian/mall/pkg/log"
 	"github.com/hanzhuoxian/mall/pkg/version"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"golang.org/x/sync/errgroup"
 )
 
+// APIServer 是基于 Gin 的 HTTP API 服务器，支持同时监听 HTTP 和 HTTPS，
+// 并内置健康检查、Prometheus 指标和 pprof 性能分析接口。
 type APIServer struct {
-	middlewares         []string
 	SecureServingInfo   *SecureServingInfo
 	InsecureServingInfo *InsecureServingInfo
 	ShutdownTimeout     *time.Duration
-
 	*gin.Engine
+	insecureServer, secureServer *http.Server // 分别对应 HTTP 和 HTTPS 的底层 http.Server 实例
+	middlewares                  []string
 	healthz                      bool
 	enableMetrics                bool
 	enableProfiling              bool
-	insecureServer, secureServer *http.Server
 }
 
+// initAPIServer 依次执行 Setup、InstallMiddlewares 和 InstallAPIs，完成服务器初始化。
 func initAPIServer(s *APIServer) {
 	s.Setup()
 	s.InstallMiddlewares()
 	s.InstallAPIs()
 }
 
+// Setup 执行服务器自定义的额外初始化逻辑，当前为空占位，后续可在此扩展。
 func (s *APIServer) Setup() {
 }
 
+// InstallMiddlewares 注册默认中间件（recovery、requestid、context）及配置中指定的中间件。
 func (s *APIServer) InstallMiddlewares() {
 	s.Use(gin.Recovery())
 	s.Use(requestid.New())
@@ -50,6 +55,7 @@ func (s *APIServer) InstallMiddlewares() {
 	}
 }
 
+// InstallAPIs 根据配置注册内置 API 路由：/healthz、/metrics、/version 及 pprof 路由。
 func (s *APIServer) InstallAPIs() {
 	if s.healthz {
 		s.GET("/healthz", func(c *gin.Context) {
@@ -71,6 +77,7 @@ func (s *APIServer) InstallAPIs() {
 	})
 }
 
+// Run 启动 HTTP（和可选的 HTTPS）服务器，若启用健康检查则等待服务就绪后再返回。
 func (s *APIServer) Run() error {
 	s.insecureServer = &http.Server{
 		Addr:    s.InsecureServingInfo.Address,
@@ -115,6 +122,7 @@ func (s *APIServer) Run() error {
 	return nil
 }
 
+// ping 循环请求 /healthz 接口，直到返回 200 或 ctx 超时，用于等待服务器启动完成。
 func (s *APIServer) ping(ctx context.Context) error {
 	addr := s.InsecureServingInfo.Address
 	if strings.HasPrefix(addr, "0.0.0.0:") {
@@ -145,6 +153,7 @@ func (s *APIServer) ping(ctx context.Context) error {
 	}
 }
 
+// Close 优雅关闭 HTTP 和 HTTPS 服务器，最多等待 10 秒。
 func (s *APIServer) Close() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 

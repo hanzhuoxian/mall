@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hanzhuoxian/mall/pkg/log"
-
 	"github.com/mattn/go-isatty"
+
+	"github.com/hanzhuoxian/mall/pkg/log"
 )
 
 // defaultLogFormatter is the default log format function Logger middleware uses.
@@ -23,7 +23,7 @@ var defaultLogFormatter = func(param gin.LogFormatterParams) string {
 
 	if param.Latency > time.Minute {
 		// Truncate in a golang < 1.8 safe way
-		param.Latency = param.Latency - param.Latency%time.Second
+		param.Latency -= param.Latency % time.Second
 	}
 
 	return fmt.Sprintf("%s%3d%s - [%s] \"%v %s%s%s %s\" %s",
@@ -37,10 +37,12 @@ var defaultLogFormatter = func(param gin.LogFormatterParams) string {
 	)
 }
 
+// Logger 返回使用默认配置的日志中间件。
 func Logger() gin.HandlerFunc {
 	return LoggerWithConfig(GetLoggerConfig(nil, nil, nil))
 }
 
+// LoggerWithConfig 返回使用自定义配置的日志中间件，支持自定义格式化函数、输出目标和跳过路径。
 func LoggerWithConfig(conf gin.LoggerConfig) gin.HandlerFunc {
 	formatter := conf.Formatter
 	if formatter == nil {
@@ -113,6 +115,7 @@ func LoggerWithConfig(conf gin.LoggerConfig) gin.HandlerFunc {
 	}
 }
 
+// GetLoggerConfig 构建并返回 gin.LoggerConfig，nil 参数将使用 gin 默认值。
 func GetLoggerConfig(formatter gin.LogFormatter, output io.Writer, skipPaths []string) gin.LoggerConfig {
 	return gin.LoggerConfig{
 		Formatter: formatter,

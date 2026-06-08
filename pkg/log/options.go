@@ -30,15 +30,15 @@ const (
 
 // Options 包含日志相关的所有配置项，支持 JSON 反序列化和 mapstructure 映射。
 type Options struct {
-	OutputPaths       []string `json:"output-paths"       mapstructure:"output-paths"`
-	ErrorOutputPaths  []string `json:"error-output-paths" mapstructure:"error-output-paths"`
 	Level             string   `json:"level"              mapstructure:"level"`
 	Format            string   `json:"format"             mapstructure:"format"`
+	Name              string   `json:"name"               mapstructure:"name"`
+	OutputPaths       []string `json:"output-paths"       mapstructure:"output-paths"`
+	ErrorOutputPaths  []string `json:"error-output-paths" mapstructure:"error-output-paths"`
 	DisableCaller     bool     `json:"disable-caller"     mapstructure:"disable-caller"`
 	DisableStacktrace bool     `json:"disable-stacktrace" mapstructure:"disable-stacktrace"`
 	EnableColor       bool     `json:"enable-color"       mapstructure:"enable-color"`
 	Development       bool     `json:"development"        mapstructure:"development"`
-	Name              string   `json:"name"               mapstructure:"name"`
 }
 
 // NewOptions 返回带有合理默认值的 Options 实例：Info 级别、console 格式、输出到 stdout/stderr。

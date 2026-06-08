@@ -16,8 +16,8 @@ type Command struct {
 	usage    string
 	desc     string
 	options  CliOptions
-	commands []*Command
 	runFunc  RunCommandFunc
+	commands []*Command
 }
 
 // CommonOptions are options that are common to all commands.

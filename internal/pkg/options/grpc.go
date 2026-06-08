@@ -14,6 +14,7 @@ type GRPCOptions struct {
 	MaxMsgSize  int    `json:"max-msg-size" mapstructure:"max-msg-size"`
 }
 
+// NewGRPCOptions 返回带有合理默认值的 GRPCOptions 实例（地址 0.0.0.0:8081，消息大小 4MB）。
 func NewGRPCOptions() *GRPCOptions {
 	return &GRPCOptions{
 		BindAddress: "0.0.0.0",
@@ -22,6 +23,7 @@ func NewGRPCOptions() *GRPCOptions {
 	}
 }
 
+// Validate 校验 gRPC 选项合法性，确保端口在有效范围内。
 func (g *GRPCOptions) Validate() []error {
 	errors := []error{}
 	if g.BindPort < 0 || g.BindPort > 65535 {
@@ -36,6 +38,7 @@ func (g *GRPCOptions) Validate() []error {
 	return errors
 }
 
+// AddFlags 向指定 FlagSet 注册 gRPC 服务器参数的命令行 flag。
 func (g *GRPCOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&g.BindAddress, "grpc.bind-address", g.BindAddress, ""+
 		"The IP address on which to serve the --grpc.bind-port(set to 0.0.0.0 for all IPv4 interfaces and :: for all IPv6 interfaces).")

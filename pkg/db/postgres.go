@@ -9,14 +9,14 @@ import (
 
 // PostgresOptions 包含 PostgreSQL 连接所需的配置，内嵌 BaseOptions 提供连接池与日志设置。
 type PostgresOptions struct {
-	BaseOptions
 	Host     string
-	Port     int
 	Username string
 	Password string
 	Database string
 	SSLMode  string // SSL 模式，默认 "disable"
 	TimeZone string // 时区，默认 "Asia/Shanghai"
+	BaseOptions
+	Port int
 }
 
 // NewPostgres 使用给定配置创建并返回一个 PostgreSQL *gorm.DB 实例。

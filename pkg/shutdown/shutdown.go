@@ -58,9 +58,9 @@ type GracefulShutter interface {
 // GracefulShutdown 是优雅关闭的核心结构，管理回调列表、关闭管理器和错误处理器。
 type GracefulShutdown struct {
 	callbacks        []ShutdownCallback
-	managers         []ShutdownManager
-	errorHandler     ErrorHandler
 	shutdownFinished chan struct{} // 所有回调执行完毕后关闭，用于通知外部等待方
+	errorHandler     ErrorHandler
+	managers         []ShutdownManager
 }
 
 // New 创建并返回一个新的 GracefulShutdown 实例。
