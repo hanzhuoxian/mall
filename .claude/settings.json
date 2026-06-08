@@ -1,6 +1,11 @@
 {
   "permissions": {
     "allow": [
+      "Bash(go install *)",
+      "Read(//Users/hanjian/go/**)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(ls /Users/hanjian/.asdf/installs/golang/1.26.3/bin/ | grep gateway)",
+      "Read(//Users/hanjian/.asdf/installs/golang/1.26.3/bin/**)"
     ]
   }
 }

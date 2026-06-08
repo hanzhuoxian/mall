@@ -2,6 +2,8 @@ package options
 
 import (
 	"fmt"
+	"net"
+	"strconv"
 
 	"github.com/spf13/pflag"
 )
@@ -21,6 +23,11 @@ func NewGRPCOptions() *GRPCOptions {
 		BindPort:    8081,
 		MaxMsgSize:  4 * 1024 * 1024,
 	}
+}
+
+// Address 返回 host:port 格式的地址。
+func (g *GRPCOptions) Address() string {
+	return net.JoinHostPort(g.BindAddress, strconv.Itoa(g.BindPort))
 }
 
 // Validate 校验 gRPC 选项合法性，确保端口在有效范围内。

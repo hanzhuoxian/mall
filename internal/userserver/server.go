@@ -6,7 +6,6 @@ import (
 
 	"github.com/hanzhuoxian/mall/internal/pkg/server"
 	"github.com/hanzhuoxian/mall/internal/userserver/cache"
-	"github.com/hanzhuoxian/mall/internal/userserver/controller"
 	"github.com/hanzhuoxian/mall/internal/userserver/store"
 	"github.com/hanzhuoxian/mall/pkg/shutdown"
 )
@@ -18,7 +17,6 @@ type userServer struct {
 	apiServer    *server.APIServer
 	storeFactory store.Factory
 	cacheFactory cache.Factory
-	controllers  *controller.Controllers
 }
 
 // preparedUserServer 是完成路由注册和关闭回调注册后可直接运行的服务实例。
@@ -33,7 +31,6 @@ func newUserServer(
 	grpcServer *server.GRPCServer,
 	sf store.Factory,
 	cf cache.Factory,
-	ctrls *controller.Controllers,
 ) *userServer {
 	return &userServer{
 		gs:           gs,
@@ -41,13 +38,13 @@ func newUserServer(
 		grpcServer:   grpcServer,
 		storeFactory: sf,
 		cacheFactory: cf,
-		controllers:  ctrls,
 	}
 }
 
 // PrepareRun 完成路由注册和关闭回调注册，返回可直接调用 Run 的 preparedUserServer。
 func (u *userServer) PrepareRun() *preparedUserServer {
-	initRouter(u.apiServer.Engine, u.controllers)
+	installRoutes(u.grpcServer)
+
 	u.gs.AddShutdownCallback(shutdown.ShutdownFunc(func(s string) error {
 		storeErr := u.storeFactory.Close()
 		cacheErr := u.cacheFactory.Close()

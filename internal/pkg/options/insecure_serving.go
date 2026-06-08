@@ -24,6 +24,11 @@ func NewInsecureServingOptions() *InsecureServingOptions {
 	}
 }
 
+// Address 返回 host:port 格式的监听地址。
+func (i *InsecureServingOptions) Address() string {
+	return net.JoinHostPort(i.BindAddress, strconv.Itoa(i.BindPort))
+}
+
 // ApplyTo 将 HTTP 监听地址写入 server.Config 的 InsecureServing 字段。
 func (i *InsecureServingOptions) ApplyTo(c *server.Config) error {
 	c.InsecureServing = &server.InsecureServingInfo{
