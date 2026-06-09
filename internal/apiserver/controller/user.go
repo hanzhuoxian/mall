@@ -22,7 +22,7 @@ func NewUserController(userClient *grpcclient.UserClient) *UserController {
 // GetUser 根据路径参数 id 获取单个用户信息。
 func (h *UserController) GetUser(c *gin.Context) {
 	resp, err := h.userClient.GetUser(c.Request.Context(), &userv1.GetUserRequest{
-		UserId: c.Param("id"),
+		Username: c.Param("id"),
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

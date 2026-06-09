@@ -89,6 +89,12 @@ func WithValidArgs(args cobra.PositionalArgs) Option {
 	}
 }
 
+func WithCommands(cmds ...*Command) Option {
+	return func(a *App) {
+		a.commands = append(a.commands, cmds...)
+	}
+}
+
 // WithDefaultValidArgs set default validation function to valid non-flag arguments.
 func WithDefaultValidArgs() Option {
 	return func(a *App) {

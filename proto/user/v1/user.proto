@@ -2,21 +2,79 @@ syntax = "proto3";
 
 package user.v1;
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "github.com/hanzhuoxian/mall/proto/user/v1;userv1";
 
 service UserService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+  rpc DeleteCollection(DeleteCollectionRequest) returns (DeleteCollectionResponse);
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
 }
 
+// User 是用户资源的完整表示，密码不对外暴露。
+message User {
+  string instance_id = 1;
+  string name        = 2;
+  string email       = 3;
+  string phone       = 4;
+  string username    = 5;
+  string nickname    = 6;
+  int32  status      = 7;
+  google.protobuf.Timestamp logined_at = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message CreateUserRequest {
+  string name     = 1;
+  string email    = 2;
+  string phone    = 3;
+  string username = 4;
+  string nickname = 5;
+  string password = 6;
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message UpdateUserRequest {
+  string instance_id = 1;
+  string email       = 2;
+  string phone       = 3;
+  string nickname    = 4;
+  string password    = 5;
+  int32  status      = 6;
+}
+
+message UpdateUserResponse {
+  User user = 1;
+}
+
+message DeleteUserRequest {
+  string instance_id = 1;
+  bool   unscoped    = 2;
+}
+
+message DeleteUserResponse {}
+
+message DeleteCollectionRequest {
+  repeated string instance_ids = 1;
+  bool            unscoped     = 2;
+}
+
+message DeleteCollectionResponse {}
+
 message GetUserRequest {
-  string user_id = 1;
+  string username = 1;
 }
 
 message GetUserResponse {
-  string user_id = 1;
-  string username = 2;
-  string email    = 3;
+  User user = 1;
 }
 
 message ListUsersRequest {
@@ -25,6 +83,6 @@ message ListUsersRequest {
 }
 
 message ListUsersResponse {
-  repeated GetUserResponse users = 1;
-  int32                    total = 2;
+  repeated User users = 1;
+  int64         total = 2;
 }

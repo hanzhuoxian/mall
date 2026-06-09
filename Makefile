@@ -83,6 +83,16 @@ cover:
 build.multi:
 	@$(MAKE) go.build.multi
 
+## proto: Generate Go code from proto files.
+.PHONY: proto
+proto:
+	@protoc \
+		--go_out=. \
+		--go_opt=paths=source_relative \
+		--go-grpc_out=. \
+		--go-grpc_opt=paths=source_relative \
+		$(shell find proto -name "*.proto")
+
 
 ## help: Show this help info.
 .PHONY: help

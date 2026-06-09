@@ -18,19 +18,13 @@ func NewUserServiceServer() *UserServiceServer {
 
 // GetUser 根据 user_id 返回用户信息。
 func (s *UserServiceServer) GetUser(_ context.Context, req *userv1.GetUserRequest) (*userv1.GetUserResponse, error) {
-	return &userv1.GetUserResponse{
-		UserId:   req.UserId,
-		Username: "demo",
-		Email:    "demo@example.com",
-	}, nil
+	return &userv1.GetUserResponse{}, nil
 }
 
 // ListUsers 返回分页用户列表。
 func (s *UserServiceServer) ListUsers(_ context.Context, req *userv1.ListUsersRequest) (*userv1.ListUsersResponse, error) {
 	return &userv1.ListUsersResponse{
-		Users: []*userv1.GetUserResponse{
-			{UserId: "1", Username: "demo", Email: "demo@example.com"},
-		},
+		Users: []*userv1.User{},
 		Total: 1,
 	}, nil
 }

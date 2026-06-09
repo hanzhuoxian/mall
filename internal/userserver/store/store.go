@@ -4,6 +4,7 @@ package store
 // Factory 是数据存储工厂接口，提供资源关闭能力。
 // 后续可在此接口中扩展各业务实体的 Store 访问方法。
 type Factory interface {
+	Users() UserStore
 	Close() error
 }
 
