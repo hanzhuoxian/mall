@@ -1,3 +1,5 @@
+// Package middleware 提供 Gin 框架通用的 HTTP 中间件实现，
+// 这里包含将 request id 与用户名注入到请求上下文的中间件。
 package middleware
 
 import (
