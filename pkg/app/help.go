@@ -13,6 +13,7 @@ const (
 	flagHelpShorthand = "H"
 )
 
+// addHelpCommandFlag 向子命令的 FlagSet 添加 -H/--help flag。
 func addHelpCommandFlag(usage string, fs *pflag.FlagSet) {
 	fs.BoolP(
 		flagHelp,
@@ -22,6 +23,8 @@ func addHelpCommandFlag(usage string, fs *pflag.FlagSet) {
 	)
 }
 
+// helpCommand 返回一个自定义的 help 子命令，替换 cobra 默认的 help command，
+// 支持 `<app> help [command]` 查看任意子命令的帮助信息。
 func helpCommand(name string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "help [command]",

@@ -4,16 +4,23 @@ import (
 	"fmt"
 
 	"github.com/google/wire"
+	"gorm.io/gorm"
+
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/userserver/store"
-	"gorm.io/gorm"
 )
+
+const DBNameUser = "mall_user"
 
 // ProviderSet is used by Wire.
 var ProviderSet = wire.NewSet(NewDatastore)
 
 type datastore struct {
 	db *gorm.DB
+}
+
+func (ds *datastore) Users() store.UserStore {
+	return newUsers(ds)
 }
 
 func (ds *datastore) Close() error {

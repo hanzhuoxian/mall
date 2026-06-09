@@ -7,6 +7,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/hanzhuoxian/mall/pkg/nflag"
+	"github.com/hanzhuoxian/mall/pkg/term"
 )
 
 // Command is a sub command structure of a cli application.
@@ -16,8 +19,8 @@ type Command struct {
 	usage    string
 	desc     string
 	options  CliOptions
-	commands []*Command
 	runFunc  RunCommandFunc
+	commands []*Command
 }
 
 // CommonOptions are options that are common to all commands.
@@ -41,7 +44,7 @@ func WithCommandRunFunc(runFunc RunCommandFunc) CommonOptions {
 }
 
 // NewCommand creates a new command.
-func NewCommand(name string, usage string, desc string, options ...CommonOptions) *Command {
+func NewCommand(usage string, desc string, options ...CommonOptions) *Command {
 	cmd := &Command{
 		usage: usage,
 		desc:  desc,
@@ -54,6 +57,7 @@ func NewCommand(name string, usage string, desc string, options ...CommonOptions
 	return cmd
 }
 
+// cobraCommand 将 Command 转换为 cobra.Command，注册子命令、flag 和 help flag。
 func (c *Command) cobraCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   c.usage,
@@ -72,10 +76,15 @@ func (c *Command) cobraCommand() *cobra.Command {
 	}
 
 	if c.options != nil {
-		for _, f := range c.options.Flags().FlagSets {
+		namedFlagSets := c.options.Flags()
+		for _, f := range namedFlagSets.FlagSets {
 			cmd.Flags().AddFlagSet(f)
 		}
-		// c.options.AddFlags(cmd.Flags())
+		cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+			cols, _, _ := term.TerminalSize(cmd.OutOrStdout())
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s\n\nUsage:\n  %s\n\n", cmd.Short, cmd.UseLine())
+			nflag.PrintSections(cmd.OutOrStdout(), namedFlagSets, cols)
+		})
 	}
 	addHelpCommandFlag(c.usage, cmd.Flags())
 
@@ -92,6 +101,7 @@ func (c *Command) AddCommands(commands ...*Command) {
 	c.commands = append(c.commands, commands...)
 }
 
+// runCommand 是子命令的 cobra Run 实现，执行失败时打印错误并以非零状态退出。
 func (c *Command) runCommand(cmd *cobra.Command, args []string) {
 	if c.runFunc == nil {
 		return
@@ -101,16 +111,6 @@ func (c *Command) runCommand(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
-}
-
-// AddCommand adds sub command to the application.
-func (a *App) AddCommand(cmd *Command) {
-	a.commands = append(a.commands, cmd)
-}
-
-// AddCommands adds multiple sub commands to the application.
-func (a *App) AddCommands(cmds ...*Command) {
-	a.commands = append(a.commands, cmds...)
 }
 
 // FormatBaseName is formatted as an executable file name under different

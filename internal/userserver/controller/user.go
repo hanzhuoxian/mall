@@ -1,30 +1,30 @@
 package controller
 
 import (
-	"net/http"
+	"context"
 
-	"github.com/gin-gonic/gin"
-	"github.com/hanzhuoxian/mall/internal/userserver/cache"
+	userv1 "github.com/hanzhuoxian/mall/proto/user/v1"
 )
 
-type UserController struct {
-	cache cache.Factory
+// UserServiceServer 实现了 userv1.UserServiceServer 接口。
+type UserServiceServer struct {
+	userv1.UnimplementedUserServiceServer
 }
 
-func NewUserController(c cache.Factory) *UserController {
-	return &UserController{cache: c}
+// NewUserServiceServer 创建 UserServiceServer 实例。
+func NewUserServiceServer() *UserServiceServer {
+	return &UserServiceServer{}
 }
 
-func (uc *UserController) Hello(ctx *gin.Context) {
-	u := uc.cache.User()
-	if err := u.SetUser(ctx, "username", "hanjian"); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	username, err := u.GetUser(ctx, "username")
-	if err != nil {
-		ctx.JSON(http.StatusNotFound, "")
-		return
-	}
-	ctx.JSON(http.StatusOK, username)
+// GetUser 根据 user_id 返回用户信息。
+func (s *UserServiceServer) GetUser(_ context.Context, req *userv1.GetUserRequest) (*userv1.GetUserResponse, error) {
+	return &userv1.GetUserResponse{}, nil
+}
+
+// ListUsers 返回分页用户列表。
+func (s *UserServiceServer) ListUsers(_ context.Context, req *userv1.ListUsersRequest) (*userv1.ListUsersResponse, error) {
+	return &userv1.ListUsersResponse{
+		Users: []*userv1.User{},
+		Total: 1,
+	}, nil
 }

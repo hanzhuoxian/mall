@@ -1,17 +1,12 @@
 package userserver
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/hanzhuoxian/mall/internal/pkg/server"
 	"github.com/hanzhuoxian/mall/internal/userserver/controller"
+	userv1 "github.com/hanzhuoxian/mall/proto/user/v1"
 )
 
-func initRouter(g *gin.Engine, ctrls *controller.Controllers) {
-	registerMiddleware(g)
-	registerController(g, ctrls)
-}
-
-func registerMiddleware(_ *gin.Engine) {}
-
-func registerController(g *gin.Engine, ctrls *controller.Controllers) {
-	g.GET("/hello", ctrls.User.Hello)
+// initGRPCServer 注册所有 gRPC 服务到服务器。
+func installRoutes(s *server.GRPCServer) {
+	userv1.RegisterUserServiceServer(s.Server, controller.NewUserServiceServer())
 }

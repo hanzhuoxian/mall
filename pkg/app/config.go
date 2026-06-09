@@ -17,8 +17,10 @@ const (
 	configFlagUsage = "Read configuration from specified `FILE`, support JSON, TOML, YAML, HCL, or Java properties formats."
 )
 
+// configFile 存储通过 --config/-c flag 指定的配置文件路径。
 var configFile string
 
+// init 将 --config/-c flag 注册到全局 pflag.CommandLine，使其在 AddConfigFlag 前即可被解析。
 func init() {
 	pflag.StringVarP(&configFile, configFlagName, configFlagShort, configFlagName, configFlagUsage)
 }
@@ -28,7 +30,7 @@ func AddConfigFlag(basename string, fs *pflag.FlagSet) {
 	fs.AddFlag(pflag.Lookup(configFlagName))
 
 	viper.AutomaticEnv()
-	viper.SetEnvPrefix(strings.Replace(strings.ToUpper(basename), "-", "_", -1))
+	viper.SetEnvPrefix(strings.ReplaceAll(strings.ToUpper(basename), "-", "_"))
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 
 	cobra.OnInitialize(func() {

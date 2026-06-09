@@ -5,10 +5,12 @@ import "github.com/google/wire"
 // ProviderSet is used by Wire.
 var ProviderSet = wire.NewSet(NewUserController, NewControllers)
 
+// Controllers 汇聚所有控制器实例，便于在路由注册时统一传递。
 type Controllers struct {
 	User *UserController
 }
 
+// NewControllers 创建并返回包含所有控制器的 Controllers 实例。
 func NewControllers(uc *UserController) *Controllers {
 	return &Controllers{User: uc}
 }

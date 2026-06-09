@@ -1,3 +1,5 @@
+// Package middleware 提供 Gin 框架通用的 HTTP 中间件实现，
+// 包括日志、请求上下文和注册的默认中间件集合。
 package middleware
 
 import (
@@ -7,12 +9,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hanzhuoxian/mall/pkg/log"
-
 	"github.com/mattn/go-isatty"
+
+	"github.com/hanzhuoxian/mall/pkg/log"
 )
 
-// defaultLogFormatter is the default log format function Logger middleware uses.
+// defaultLogFormatter 默认的日志格式化函数，供 Logger 中间件使用。
+// 它根据 gin 提供的参数生成结构化的一行日志文本。
 var defaultLogFormatter = func(param gin.LogFormatterParams) string {
 	var statusColor, methodColor, resetColor string
 	if param.IsOutputColor() {
@@ -23,7 +26,7 @@ var defaultLogFormatter = func(param gin.LogFormatterParams) string {
 
 	if param.Latency > time.Minute {
 		// Truncate in a golang < 1.8 safe way
-		param.Latency = param.Latency - param.Latency%time.Second
+		param.Latency -= param.Latency % time.Second
 	}
 
 	return fmt.Sprintf("%s%3d%s - [%s] \"%v %s%s%s %s\" %s",
@@ -37,10 +40,14 @@ var defaultLogFormatter = func(param gin.LogFormatterParams) string {
 	)
 }
 
+// Logger 返回使用默认配置的日志中间件。
+// 可直接作为 Gin 路由组或全局中间件使用。
 func Logger() gin.HandlerFunc {
 	return LoggerWithConfig(GetLoggerConfig(nil, nil, nil))
 }
 
+// LoggerWithConfig 返回使用自定义配置的日志中间件，支持自定义格式化函数、输出目标和跳过路径。
+// 参数 conf: 传入的 gin.LoggerConfig，若字段为空则使用合理的默认值。
 func LoggerWithConfig(conf gin.LoggerConfig) gin.HandlerFunc {
 	formatter := conf.Formatter
 	if formatter == nil {
@@ -111,9 +118,10 @@ func LoggerWithConfig(conf gin.LoggerConfig) gin.HandlerFunc {
 			log.L(c).Info(formatter(param))
 		}
 	}
-
 }
 
+// GetLoggerConfig 构建并返回 gin.LoggerConfig，nil 参数将使用 gin 默认值。
+// 常用于在程序初始化时组合自定义 formatter/output/skipPaths。
 func GetLoggerConfig(formatter gin.LogFormatter, output io.Writer, skipPaths []string) gin.LoggerConfig {
 	return gin.LoggerConfig{
 		Formatter: formatter,

@@ -5,15 +5,18 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/hanzhuoxian/mall/internal/pkg/server"
 	"github.com/spf13/pflag"
+
+	"github.com/hanzhuoxian/mall/internal/pkg/server"
 )
 
+// InsecureServingOptions 包含 HTTP（非 TLS）服务的监听地址和端口配置。
 type InsecureServingOptions struct {
 	BindAddress string `json:"bind-address" mapstructure:"bind-address"`
 	BindPort    int    `json:"bind-port"    mapstructure:"bind-port"`
 }
 
+// NewInsecureServingOptions 返回默认监听 127.0.0.1:8080 的 InsecureServingOptions 实例。
 func NewInsecureServingOptions() *InsecureServingOptions {
 	return &InsecureServingOptions{
 		BindAddress: "127.0.0.1",
@@ -21,6 +24,12 @@ func NewInsecureServingOptions() *InsecureServingOptions {
 	}
 }
 
+// Address 返回 host:port 格式的监听地址。
+func (i *InsecureServingOptions) Address() string {
+	return net.JoinHostPort(i.BindAddress, strconv.Itoa(i.BindPort))
+}
+
+// ApplyTo 将 HTTP 监听地址写入 server.Config 的 InsecureServing 字段。
 func (i *InsecureServingOptions) ApplyTo(c *server.Config) error {
 	c.InsecureServing = &server.InsecureServingInfo{
 		Address: net.JoinHostPort(i.BindAddress, strconv.Itoa(i.BindPort)),
@@ -28,6 +37,7 @@ func (i *InsecureServingOptions) ApplyTo(c *server.Config) error {
 	return nil
 }
 
+// Validate 校验 HTTP 服务选项合法性，确保端口在 0-65535 范围内。
 func (i *InsecureServingOptions) Validate() []error {
 	var errors []error
 
