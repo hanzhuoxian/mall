@@ -20,6 +20,10 @@ func initApiServer(cfg *config.Config) (*apiserver, error) {
 
 		// grpc
 		provideUserClient,
+
+		// auth
+		NewAutoAuth,
+		NewJWTAuth,
 	)
 	return nil, nil
 }

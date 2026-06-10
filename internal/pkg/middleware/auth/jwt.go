@@ -7,6 +7,9 @@ import (
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
 )
 
+// AuthBasicName 表示 HTTP Basic 认证在 Authorization 头中使用的方案名称。
+const AuthJWTName = "Bearer"
+
 // JWTStrategy
 type JWTStrategy struct {
 	ginjwt.GinJWTMiddleware

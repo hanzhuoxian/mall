@@ -12,6 +12,7 @@ type ServerRunOptions struct {
 	Mode        string   `json:"mode"        mapstructure:"mode"`
 	Middlewares []string `json:"middlewares" mapstructure:"middlewares"`
 	Healthz     bool     `json:"healthz"     mapstructure:"healthz"`
+	JWTSecret   string   `json:"jwt-secret"  mapstructure:"jwt-secret"`
 }
 
 // NewServerOptions 返回与 server.NewConfig() 默认值一致的 ServerRunOptions 实例。
@@ -43,4 +44,5 @@ func (s *ServerRunOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&s.Mode, "server.mode", s.Mode, "server mode, Supported server mode: debug, test, release")
 	fs.BoolVar(&s.Healthz, "server.healthz", s.Healthz, "enable healthz")
 	fs.StringSliceVar(&s.Middlewares, "server.middlewares", s.Middlewares, "server middlewares")
+	fs.StringVar(&s.JWTSecret, "server.jwt-secret", s.JWTSecret, "JWT signing secret")
 }

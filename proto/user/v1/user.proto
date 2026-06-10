@@ -13,6 +13,7 @@ service UserService {
   rpc DeleteCollection(DeleteCollectionRequest) returns (DeleteCollectionResponse);
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc AuthenticateUser(AuthenticateUserRequest) returns (AuthenticateUserResponse);
 }
 
 // User 是用户资源的完整表示，密码不对外暴露。
@@ -70,7 +71,7 @@ message DeleteCollectionRequest {
 message DeleteCollectionResponse {}
 
 message GetUserRequest {
-  string username = 1;
+  string instance_id = 1;
 }
 
 message GetUserResponse {
@@ -85,4 +86,13 @@ message ListUsersRequest {
 message ListUsersResponse {
   repeated User users = 1;
   int64         total = 2;
+}
+
+message AuthenticateUserRequest {
+  string identifier = 1;
+  string password = 2;
+}
+
+message AuthenticateUserResponse {
+  string instance_id = 1;
 }

@@ -1,6 +1,13 @@
 package types
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/hanzhuoxian/mall/pkg/auth"
+	userv1 "github.com/hanzhuoxian/mall/proto/user/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
+)
 
 type User struct {
 	ObjectMeta `json:"metadata,omitempty"`
@@ -21,4 +28,26 @@ type UserList struct {
 
 func (u *User) TableName() string {
 	return "user"
+}
+
+func (u *User) Compare(password string) error {
+	if err := auth.ComparePassword(u.Password, password); err != nil {
+		return fmt.Errorf("failed to compile password: %w", err)
+	}
+	return nil
+}
+
+func (u *User) ToProto() *userv1.User {
+	return &userv1.User{
+		InstanceId: u.InstanceID,
+		Name:       u.Name,
+		Email:      u.Email,
+		Phone:      u.Phone,
+		Username:   u.Username,
+		Nickname:   u.Nickname,
+		Status:     int32(u.Status),
+		LoginedAt:  timestamppb.New(u.LoginedAt),
+		CreatedAt:  timestamppb.New(u.CreatedAt),
+		UpdatedAt:  timestamppb.New(u.UpdatedAt),
+	}
 }
