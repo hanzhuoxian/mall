@@ -26,7 +26,9 @@ func initApiServer(cfg *config.Config) (*apiserver, error) {
 	}
 	userController := controller.NewUserController(userClient)
 	controllers := controller.NewControllers(userController)
-	apiserverApiserver, err := newApiServer(gracefulShutdown, apiServer, controllers)
+	authStrategy := NewAutoAuth(cfg, userClient)
+	jwtStrategy := NewJWTAuth(cfg, userClient)
+	apiserverApiserver, err := newApiServer(gracefulShutdown, apiServer, controllers, authStrategy, jwtStrategy)
 	if err != nil {
 		return nil, err
 	}

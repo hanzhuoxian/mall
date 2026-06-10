@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
 	pkgoptions "github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/pkg/server"
 	"github.com/hanzhuoxian/mall/internal/userserver/config"
@@ -45,7 +46,11 @@ func provideAPIServer(cfg *config.Config) (*server.APIServer, error) {
 // provideGRPCServer 根据配置构建 gRPC 服务器实例，若配置了消息大小限制则同时设置收发限制。
 func provideGRPCServer(cfg *config.Config) *server.GRPCServer {
 	addr := fmt.Sprintf("%s:%d", cfg.GRPCOptions.BindAddress, cfg.GRPCOptions.BindPort)
-	var opts []grpc.ServerOption
+	opts := []grpc.ServerOption{
+		grpc.ChainUnaryInterceptor(
+			middleware.ValidationUnaryInterceptor,
+		),
+	}
 	if cfg.GRPCOptions.MaxMsgSize > 0 {
 		opts = append(opts,
 			grpc.MaxRecvMsgSize(cfg.GRPCOptions.MaxMsgSize),

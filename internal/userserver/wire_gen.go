@@ -9,6 +9,7 @@ package userserver
 import (
 	"github.com/hanzhuoxian/mall/internal/userserver/cache/redis"
 	"github.com/hanzhuoxian/mall/internal/userserver/config"
+	"github.com/hanzhuoxian/mall/internal/userserver/service"
 	"github.com/hanzhuoxian/mall/internal/userserver/store/mysql"
 )
 
@@ -32,6 +33,7 @@ func initUserServer(cfg *config.Config) (*userServer, error) {
 	if err != nil {
 		return nil, err
 	}
-	userserverUserServer := newUserServer(gracefulShutdown, apiServer, grpcServer, factory, cacheFactory)
+	serviceService := service.NewService(factory)
+	userserverUserServer := newUserServer(gracefulShutdown, apiServer, grpcServer, factory, cacheFactory, serviceService)
 	return userserverUserServer, nil
 }

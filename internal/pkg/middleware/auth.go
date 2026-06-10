@@ -4,6 +4,7 @@ import "github.com/gin-gonic/gin"
 
 // UserIdentifier 是上下文中用于标识当前用户的键名。
 const UserIdentifier = "identifier"
+const UserInstanceID = "instanceID"
 
 // AuthStrategy 定义认证策略接口，任何认证实现只需返回一个 gin.HandlerFunc。
 // 返回的 HandlerFunc 应处理认证逻辑并在认证通过时将必要的信息写入 Context。

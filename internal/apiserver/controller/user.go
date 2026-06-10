@@ -19,10 +19,20 @@ func NewUserController(userClient *grpcclient.UserClient) *UserController {
 	return &UserController{userClient: userClient}
 }
 
+type GetUserRequest struct {
+	InstanceID string `uri:"id" binding:"required"`
+}
+
 // GetUser 根据路径参数 id 获取单个用户信息。
 func (h *UserController) GetUser(c *gin.Context) {
+	var req GetUserRequest
+	if err := c.ShouldBindUri(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	resp, err := h.userClient.GetUser(c.Request.Context(), &userv1.GetUserRequest{
-		Username: c.Param("id"),
+		InstanceId: req.InstanceID,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

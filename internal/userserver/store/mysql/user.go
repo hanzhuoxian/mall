@@ -18,7 +18,25 @@ func newUsers(ds *datastore) *users {
 
 func (user *users) Get(ctx context.Context, username string, opts types.GetOptions) (*types.User, error) {
 	u := &types.User{}
-	err := user.db.First(u).Error
+	err := user.db.Where("username = ?", username).First(u).Error
+	return u, err
+}
+
+func (user *users) GetByEmail(ctx context.Context, email string, opts types.GetOptions) (*types.User, error) {
+	u := &types.User{}
+	err := user.db.Where("email = ?", email).First(u).Error
+	return u, err
+}
+
+func (user *users) GetByPhone(ctx context.Context, phone string, opts types.GetOptions) (*types.User, error) {
+	u := &types.User{}
+	err := user.db.Where("phone = ?", phone).First(u).Error
+	return u, err
+}
+
+func (user *users) GetByInstanceID(ctx context.Context, instanceID string, opts types.GetOptions) (*types.User, error) {
+	u := &types.User{}
+	err := user.db.Where("instance_id = ?", instanceID).First(u).Error
 	return u, err
 }
 

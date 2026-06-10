@@ -1,6 +1,11 @@
 package service
 
-import "github.com/appleboy/gin-jwt/v3/store"
+import (
+	"github.com/google/wire"
+	"github.com/hanzhuoxian/mall/internal/userserver/store"
+)
+
+var ProviderSet = wire.NewSet(NewService)
 
 type Service interface {
 	Users() UserSrv
