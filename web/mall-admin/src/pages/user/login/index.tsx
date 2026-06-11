@@ -23,8 +23,8 @@ import { Alert, App, Tabs } from 'antd';
 import { createStyles } from 'antd-style';
 import React, { startTransition, useState } from 'react';
 import { Footer } from '@/components';
-import { login } from '@/services/ant-design-pro/api';
 import { getFakeCaptcha } from '@/services/ant-design-pro/login';
+import { login } from './service';
 import Settings from '../../../../config/defaultSettings';
 
 const useStyles = createStyles(({ token }) => {
@@ -110,7 +110,7 @@ const LoginMessage: React.FC<{
 };
 
 const Login: React.FC = () => {
-  const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
+  const [loginFailed, setLoginFailed] = useState(false);
   const [type, setType] = useState<string>('account');
   const { initialState, setInitialState } = useModel('@@initialState');
   const { styles } = useStyles();
@@ -152,33 +152,24 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (values: API.LoginParams) => {
     try {
-      // 登录
-      const msg = await login({ ...values, type });
-      if (msg.status === 'ok') {
-        const defaultLoginSuccessMessage = intl.formatMessage({
-          id: 'pages.login.success',
-          defaultMessage: '登录成功！',
-        });
-        message.success(defaultLoginSuccessMessage);
+      const msg = await login({
+        identifier: values.username!,
+        password: values.password!,
+      });
+      if (msg.success) {
+        localStorage.setItem('token', msg.data.access_token);
+        message.success(intl.formatMessage({ id: 'pages.login.success', defaultMessage: '登录成功！' }));
         await fetchUserInfo();
         const urlParams = new URL(window.location.href).searchParams;
-        const redirectUrl = getSafeRedirectUrl(urlParams.get('redirect'));
-        window.location.href = redirectUrl;
+        window.location.href = getSafeRedirectUrl(urlParams.get('redirect'));
         return;
       }
-      console.log(msg);
-      // 如果失败去设置用户错误信息
-      setUserLoginState(msg);
+      setLoginFailed(true);
     } catch (error) {
-      const defaultLoginFailureMessage = intl.formatMessage({
-        id: 'pages.login.failure',
-        defaultMessage: '登录失败，请重试！',
-      });
       console.log(error);
-      message.error(defaultLoginFailureMessage);
+      message.error(intl.formatMessage({ id: 'pages.login.failure', defaultMessage: '登录失败，请重试！' }));
     }
   };
-  const { status, type: loginType } = userLoginState;
 
   return (
     <div className={styles.container}>
@@ -245,7 +236,7 @@ const Login: React.FC = () => {
             ]}
           />
 
-          {status === 'error' && loginType === 'account' && (
+          {loginFailed && type === 'account' && (
             <LoginMessage
               content={intl.formatMessage({
                 id: 'pages.login.accountLogin.errorMessage',
@@ -302,7 +293,7 @@ const Login: React.FC = () => {
             </>
           )}
 
-          {status === 'error' && loginType === 'mobile' && (
+          {loginFailed && type === 'mobile' && (
             <LoginMessage content="验证码错误" />
           )}
           {type === 'mobile' && (

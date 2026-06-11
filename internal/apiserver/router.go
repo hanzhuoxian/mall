@@ -16,6 +16,7 @@ func installRoutes(r *gin.Engine, controllers *controller.Controllers, authStrat
 	v1 := r.Group("/v1")
 	{
 		users := v1.Group("/users", authStrategy.AuthFunc())
+		users.GET("/me", controllers.User.GetMe)
 		users.POST("", controllers.User.CreateUser)
 		users.DELETE("", controllers.User.DeleteCollection)
 		users.GET("", controllers.User.ListUsers)

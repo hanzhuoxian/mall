@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hanzhuoxian/mall/pkg/errors"
 	"github.com/hanzhuoxian/mall/pkg/log"
@@ -17,11 +19,41 @@ type Response struct {
 	Data      any    `json:"data,omitempty"`
 }
 
+// grpcToHTTP maps gRPC status codes to HTTP status codes.
+func grpcToHTTP(code codes.Code) int {
+	switch code {
+	case codes.NotFound:
+		return http.StatusNotFound
+	case codes.AlreadyExists:
+		return http.StatusConflict
+	case codes.PermissionDenied:
+		return http.StatusForbidden
+	case codes.Unauthenticated:
+		return http.StatusUnauthorized
+	case codes.InvalidArgument:
+		return http.StatusBadRequest
+	case codes.Unimplemented:
+		return http.StatusNotImplemented
+	case codes.Unavailable:
+		return http.StatusServiceUnavailable
+	default:
+		return http.StatusInternalServerError
+	}
+}
+
 // Write writes a unified response. On error, it logs and uses the coder's
 // HTTP status and code. On success, it returns HTTP 200 with data.
 func Write(c *gin.Context, err error, data any) {
 	if err != nil {
-		log.Errorf("%#+v", err)
+		if st, ok := status.FromError(err); ok {
+			log.Errorf("gRPC error: code=%s message=%s", st.Code(), st.Message())
+			c.JSON(grpcToHTTP(st.Code()), Response{
+				Code:    int(st.Code()),
+				Message: st.Message(),
+			})
+			return
+		}
+		log.Errorf("%v, %+v", err, err)
 		coder := errors.ParseCoder(err)
 		c.JSON(coder.HTTPStatus(), Response{
 			Code:      int(coder.Code()),

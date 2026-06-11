@@ -8,6 +8,7 @@ import (
 
 	jwt "github.com/appleboy/gin-jwt/v3"
 	"github.com/appleboy/gin-jwt/v3/core"
+	jwtv5 "github.com/golang-jwt/jwt/v5"
 	"github.com/gin-gonic/gin"
 
 	"github.com/hanzhuoxian/mall/internal/apiserver/config"
@@ -52,7 +53,13 @@ func NewJWTAuth(cfg *config.Config, userClient *grpcclient.UserClient) auth.JWTS
 		Key:              []byte(cfg.ServerRunOptions.JWTSecret),
 		Timeout:          time.Hour,
 		MaxRefresh:       time.Hour * 24,
-		Authenticator:    authenticator(userClient),
+		Authenticator: authenticator(userClient),
+		PayloadFunc: func(data any) jwtv5.MapClaims {
+			if instanceID, ok := data.(string); ok {
+				return jwtv5.MapClaims{middleware.UserIdentifier: instanceID}
+			}
+			return jwtv5.MapClaims{}
+		},
 		LoginResponse: func(c *gin.Context, token *core.Token) {
 			response.Success(c, token)
 		},
@@ -61,10 +68,6 @@ func NewJWTAuth(cfg *config.Config, userClient *grpcclient.UserClient) auth.JWTS
 		},
 		RefreshResponse: func(c *gin.Context, token *core.Token) {
 			response.Success(c, token)
-		},
-		IdentityHandler: func(c *gin.Context) any {
-			claims := jwt.ExtractClaims(c)
-			return claims[jwt.IdentityKey]
 		},
 		IdentityKey: middleware.UserIdentifier,
 		Unauthorized: func(c *gin.Context, code int, message string) {
@@ -82,7 +85,7 @@ func authenticator(userClient *grpcclient.UserClient) func(c *gin.Context) (any,
 		var login loginInfo
 		var err error
 
-		if c.Request.Header.Get("Authorization") != "" {
+		if strings.HasPrefix(c.Request.Header.Get("Authorization"), "Basic") {
 			login, err = parseWithHeader(c)
 		} else {
 			login, err = parseWithBody(c)

@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/hanzhuoxian/mall/internal/apiserver/grpcclient"
+	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
 	"github.com/hanzhuoxian/mall/internal/pkg/response"
 	userv1 "github.com/hanzhuoxian/mall/proto/user/v1"
 )
@@ -115,6 +116,19 @@ func (h *UserController) DeleteCollection(c *gin.Context) {
 	resp, err := h.userClient.DeleteCollection(c.Request.Context(), &userv1.DeleteCollectionRequest{
 		InstanceIds: req.InstanceIds,
 		Unscoped:    req.Unscoped,
+	})
+	if err != nil {
+		response.Fail(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+// GetMe 获取当前登录用户的信息。
+func (h *UserController) GetMe(c *gin.Context) {
+	instanceID := c.GetString(middleware.UserIdentifier)
+	resp, err := h.userClient.GetUser(c.Request.Context(), &userv1.GetUserRequest{
+		InstanceId: instanceID,
 	})
 	if err != nil {
 		response.Fail(c, err)

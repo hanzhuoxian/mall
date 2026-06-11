@@ -93,16 +93,27 @@ export const errorConfig: RequestConfig = {
   // 请求拦截器
   requestInterceptors: [
     (config: RequestOptions) => {
-      // 拦截请求配置，进行个性化处理。
-      // 示例：为请求附加 token（按需启用）
-      // const token = localStorage.getItem('token');
-      // if (token) {
-      //   config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
-      // }
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
+      }
       return config;
     },
   ],
 
-  // 响应拦截器
-  responseInterceptors: [],
+  // 响应拦截器：将后端 { code, message, data } 统一转换为 { success, data, errorCode, errorMessage }
+  responseInterceptors: [
+    (response) => {
+      const resData = response.data as any;
+      if (resData && typeof resData.code === 'number') {
+        response.data = {
+          success: resData.code === 0,
+          data: resData.data,
+          errorCode: resData.code !== 0 ? resData.code : undefined,
+          errorMessage: resData.code !== 0 ? resData.message : undefined,
+        };
+      }
+      return response;
+    },
+  ],
 };

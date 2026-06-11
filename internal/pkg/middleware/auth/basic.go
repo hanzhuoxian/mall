@@ -43,8 +43,7 @@ func (b BasicStrategy) AuthFunc() gin.HandlerFunc {
 			c.Abort()
 		}
 		if instanceID, ok := b.authenticate(pair[0], pair[1]); ok {
-			c.Set(middleware.UserIdentifier, pair[0])
-			c.Set(middleware.UserInstanceID, instanceID)
+			c.Set(middleware.UserIdentifier, instanceID)
 		}
 		c.Next()
 	}

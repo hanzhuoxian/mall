@@ -19,7 +19,7 @@ import {
   OfflineBanner,
   VersionDropdown,
 } from '@/components';
-import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
+import { getCurrentUser } from '@/pages/user/login/service';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
 
@@ -38,16 +38,23 @@ export async function getInitialState(): Promise<{
 }> {
   const fetchUserInfo = async () => {
     try {
-      const msg = await queryCurrentUser({
-        skipErrorHandler: true,
-      });
-      return msg.data;
+      const msg = await getCurrentUser();
+      if (msg.success && msg.data?.user) {
+        const u = msg.data.user;
+        return {
+          name: u.name,
+          email: u.email,
+          userid: u.instanceId,
+          phone: u.phone,
+        } as API.CurrentUser;
+      }
     } catch (_error) {
-      const { pathname, search, hash } = history.location;
-      history.replace(
-        `${loginPath}?redirect=${encodeURIComponent(pathname + search + hash)}`,
-      );
+      // ignore
     }
+    const { pathname, search, hash } = history.location;
+    history.replace(
+      `${loginPath}?redirect=${encodeURIComponent(pathname + search + hash)}`,
+    );
     return undefined;
   };
   // 如果不是登录页面，执行
@@ -190,7 +197,7 @@ export const layout: RunTimeLayoutConfig = ({
  * @doc https://umijs.org/docs/max/request#配置
  */
 export const request: RequestConfig = {
-  baseURL: isDev ? '' : 'https://pro-api.ant-design-demo.workers.dev',
+  baseURL: isDev ? '' : 'http://localhost:9090',
   ...errorConfig,
 };
 
