@@ -3,7 +3,6 @@ package apiserver
 import (
 	"context"
 	"encoding/base64"
-	"net/http"
 	"strings"
 	"time"
 
@@ -13,16 +12,18 @@ import (
 
 	"github.com/hanzhuoxian/mall/internal/apiserver/config"
 	"github.com/hanzhuoxian/mall/internal/apiserver/grpcclient"
+	"github.com/hanzhuoxian/mall/internal/pkg/coder"
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware/auth"
 	"github.com/hanzhuoxian/mall/internal/pkg/response"
+	"github.com/hanzhuoxian/mall/pkg/errors"
 	"github.com/hanzhuoxian/mall/pkg/log"
 	userv1 "github.com/hanzhuoxian/mall/proto/user/v1"
 )
 
 type loginInfo struct {
-	Identifier string `form:"identifier" json:"identifier" binding:"required,identifier"`
-	Password   string `form:"password" json:"password" binding:"required,password"`
+	Identifier string `form:"identifier" json:"identifier" binding:"required"`
+	Password   string `form:"password" json:"password" binding:"required"`
 }
 
 // NewAutoAuth 创建 Auto 认证策略，根据 Authorization 头自动选择 Basic 或 JWT。
@@ -53,13 +54,13 @@ func NewJWTAuth(cfg *config.Config, userClient *grpcclient.UserClient) auth.JWTS
 		MaxRefresh:       time.Hour * 24,
 		Authenticator:    authenticator(userClient),
 		LoginResponse: func(c *gin.Context, token *core.Token) {
-			response.Write(c, nil, nil)
+			response.Success(c, token)
 		},
 		LogoutResponse: func(c *gin.Context) {
-			c.JSON(http.StatusOK, nil)
+			response.Success(c, nil)
 		},
 		RefreshResponse: func(c *gin.Context, token *core.Token) {
-			c.JSON(http.StatusOK, token)
+			response.Success(c, token)
 		},
 		IdentityHandler: func(c *gin.Context) any {
 			claims := jwt.ExtractClaims(c)
@@ -67,7 +68,7 @@ func NewJWTAuth(cfg *config.Config, userClient *grpcclient.UserClient) auth.JWTS
 		},
 		IdentityKey: middleware.UserIdentifier,
 		Unauthorized: func(c *gin.Context, code int, message string) {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": message})
+			response.Fail(c, errors.New(coder.ErrTokenInvalid, "Token invalid"))
 		},
 		TokenLookup:   "header: Authorization",
 		TokenHeadName: "Bearer",
@@ -95,6 +96,10 @@ func authenticator(userClient *grpcclient.UserClient) func(c *gin.Context) (any,
 			Identifier: login.Identifier,
 			Password:   login.Password,
 		})
+		if err != nil {
+			log.Errorf("authenticate user %q failed: %v", login.Identifier, err)
+			return "", errors.New(coder.ErrPasswordIncorrect, "password incorrect")
+		}
 		return resp.InstanceId, nil
 	}
 }

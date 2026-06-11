@@ -52,7 +52,7 @@ func (ext Extend) Merge(extendShadow string) Extend {
 // 唯一实例 ID、名称、扩展字段及软删除支持。
 type ObjectMeta struct {
 	// InstanceID 是系统生成的全局唯一实例标识符。
-	InstanceID string `json:"instanceID,omitempty" gorm:"unique;column:instance_id;type:varchar(32);not null"`
+	InstanceID string `json:"instanceID,omitempty" gorm:"unique;column:instance_id;type:varchar(64);not null"`
 	// Name 是资源名称。
 	Name string `json:"name,omitempty" gorm:"column:name;type:varchar(64);not null" validate:"name"`
 	// Extend 存储扩展键值对，不落库，通过 ExtendShadow 与数据库同步。

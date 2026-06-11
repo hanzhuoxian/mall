@@ -46,7 +46,8 @@ export USAGE_OPTIONS
 
 .PHONY: run
 run:
-	@$(GO) run -ldflags "$(GO_LDFLAGS)" cmd/mall/main.go
+	@$(GO) run $(GO_LDFLAGS) cmd/mall-user-server/main.go
+	@$(GO) run $(GO_LDFLAGS) cmd/mall-api-server/main.go
 
 ## tidy: Run go mod tidy to clean up go.mod and go.sum.
 .PHONY: tidy

@@ -107,6 +107,13 @@ func (c *Command) runCommand(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	if c.options != nil {
+		if errs := c.options.Validate(); len(errs) != 0 {
+			fmt.Fprintf(os.Stderr, "Error: invalid options: %v\n", errs)
+			os.Exit(1)
+		}
+	}
+
 	if err := c.runFunc(args); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)

@@ -18,17 +18,28 @@ func NewUserServiceServer(svc service.Service) *UserServiceServer {
 	return &UserServiceServer{svc: svc}
 }
 
-// GetUser 根据 user_id 返回用户信息。
+func (s *UserServiceServer) CreateUser(ctx context.Context, req *userv1.CreateUserRequest) (*userv1.CreateUserResponse, error) {
+	return s.svc.Users().Create(ctx, req)
+}
+
+func (s *UserServiceServer) UpdateUser(ctx context.Context, req *userv1.UpdateUserRequest) (*userv1.UpdateUserResponse, error) {
+	return s.svc.Users().Update(ctx, req)
+}
+
+func (s *UserServiceServer) DeleteUser(ctx context.Context, req *userv1.DeleteUserRequest) (*userv1.DeleteUserResponse, error) {
+	return s.svc.Users().Delete(ctx, req)
+}
+
+func (s *UserServiceServer) DeleteCollection(ctx context.Context, req *userv1.DeleteCollectionRequest) (*userv1.DeleteCollectionResponse, error) {
+	return s.svc.Users().DeleteCollection(ctx, req)
+}
+
 func (s *UserServiceServer) GetUser(ctx context.Context, req *userv1.GetUserRequest) (*userv1.GetUserResponse, error) {
 	return s.svc.Users().Get(ctx, req)
 }
 
-// ListUsers 返回分页用户列表。
-func (s *UserServiceServer) ListUsers(_ context.Context, req *userv1.ListUsersRequest) (*userv1.ListUsersResponse, error) {
-	return &userv1.ListUsersResponse{
-		Users: []*userv1.User{},
-		Total: 1,
-	}, nil
+func (s *UserServiceServer) ListUsers(ctx context.Context, req *userv1.ListUsersRequest) (*userv1.ListUsersResponse, error) {
+	return s.svc.Users().List(ctx, req)
 }
 
 func (s *UserServiceServer) AuthenticateUser(ctx context.Context, req *userv1.AuthenticateUserRequest) (*userv1.AuthenticateUserResponse, error) {

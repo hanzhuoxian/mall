@@ -33,7 +33,7 @@ func NewMySQLOptions() *MySQLOptions {
 		MaxIdleConnections:    100,
 		MaxOpenConnections:    100,
 		MaxConnectionLifeTime: time.Duration(10) * time.Second,
-		LogLevel:              1,
+		LogLevel:              4,
 	}
 }
 

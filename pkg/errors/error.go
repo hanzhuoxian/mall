@@ -14,7 +14,7 @@ type codeError struct {
 }
 
 func (err *codeError) Error() string {
-	return err.Error()
+	return err.err.Error()
 }
 
 func (err *codeError) Cause() error {

@@ -43,6 +43,11 @@ func Success(c *gin.Context, data any) {
 }
 
 // Fail writes an error response derived from err.
-func Fail(c *gin.Context, err error, data any) {
+func Fail(c *gin.Context, err error) {
+	Write(c, err, nil)
+}
+
+// FailWith writes an error response with optional data payload.
+func FailWith(c *gin.Context, err error, data any) {
 	Write(c, err, data)
 }

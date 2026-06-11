@@ -21,9 +21,11 @@ type Options struct {
 
 // NewOptions 返回带有各子系统默认值的 Options 实例。
 func NewOptions() *Options {
+	mysqlOpt := pkgoptions.NewMySQLOptions()
+	mysqlOpt.Database = "mall_user"
 	return &Options{
 		ServerRunOptions:       pkgoptions.NewServerOptions(),
-		MySQLOptions:           pkgoptions.NewMySQLOptions(),
+		MySQLOptions:           mysqlOpt,
 		GRPCOptions:            pkgoptions.NewGRPCOptions(),
 		InsecureServingOptions: pkgoptions.NewInsecureServingOptions(),
 		RedisOptions:           pkgoptions.NewRedisOptions(),
