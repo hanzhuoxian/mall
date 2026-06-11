@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	"github.com/hanzhuoxian/mall/internal/pkg/admin"
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/types"
 	"github.com/hanzhuoxian/mall/pkg/app"
@@ -25,7 +27,7 @@ type initAdminOptions struct {
 func newInitAdminOptions() *initAdminOptions {
 	return &initAdminOptions{
 		MySQL:    options.NewMySQLOptions(),
-		Username: "admin",
+		Username: admin.AdminUserName,
 		Nickname: "Administrator",
 	}
 }
@@ -96,11 +98,11 @@ func runInitAdmin(opts *initAdminOptions) error {
 			InstanceID: uuid.New().String(),
 			Name:       opts.Username,
 		},
-		Username:  opts.Username,
-		Nickname:  opts.Nickname,
-		Email:     opts.Email,
-		Password:  hashed,
-		Status:    1,
+		Username: opts.Username,
+		Nickname: opts.Nickname,
+		Email:    opts.Email,
+		Password: hashed,
+		Status:   1,
 	}
 
 	if err := db.WithContext(ctx).Create(user).Error; err != nil {
