@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-var unknowCoder = defaultCoder{1, http.StatusInternalServerError, "An internal server error occurred", ""}
+var unknownCoder = defaultCoder{DefaultCode, http.StatusInternalServerError, "An internal server error occurred", ""}
 
 type Coder interface {
 	// HTTP status that should be used for the associated error code.
@@ -19,12 +19,12 @@ type Coder interface {
 	Reference() string
 
 	// Code returns the code of the coder
-	Code() int
+	Code() ErrorCode
 }
 
 type defaultCoder struct {
 	// C refers to the integer code of the ErrCode.
-	C int
+	C ErrorCode
 
 	// HTTP status that should be used for the associated error code.
 	HTTP int
@@ -36,7 +36,12 @@ type defaultCoder struct {
 	Ref string
 }
 
-func (coder defaultCoder) Code() int {
+// pkg/errors/code.go 新增
+func NewCoder(code ErrorCode, httpStatus int, msg, ref string) Coder {
+	return defaultCoder{code, httpStatus, msg, ref}
+}
+
+func (coder defaultCoder) Code() ErrorCode {
 	return coder.C
 }
 
@@ -54,8 +59,32 @@ func (coder defaultCoder) HTTPStatus() int {
 	}
 	return coder.HTTP
 }
+func IsCode(err error, code ErrorCode) bool {
+	if v, ok := err.(*codeError); ok {
+		if v.code == code {
+			return true
+		}
+		if v.cause != nil {
+			return IsCode(err, code)
+		}
+	}
 
-var codes = map[int]Coder{}
+	return false
+}
+
+func ParseCoder(err error) Coder {
+	if err == nil {
+		return nil
+	}
+	if v, ok := err.(*codeError); ok {
+		if coder, ok := codes[v.code]; ok {
+			return coder
+		}
+	}
+	return unknownCoder
+}
+
+var codes = map[ErrorCode]Coder{}
 var codeMux sync.Mutex
 
 func Register(coder Coder) {
@@ -80,5 +109,5 @@ func MustRegister(coder Coder) {
 }
 
 func init() {
-	Register(unknowCoder)
+	Register(unknownCoder)
 }

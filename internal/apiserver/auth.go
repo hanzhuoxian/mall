@@ -15,6 +15,7 @@ import (
 	"github.com/hanzhuoxian/mall/internal/apiserver/grpcclient"
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware/auth"
+	"github.com/hanzhuoxian/mall/internal/pkg/response"
 	"github.com/hanzhuoxian/mall/pkg/log"
 	userv1 "github.com/hanzhuoxian/mall/proto/user/v1"
 )
@@ -52,7 +53,7 @@ func NewJWTAuth(cfg *config.Config, userClient *grpcclient.UserClient) auth.JWTS
 		MaxRefresh:       time.Hour * 24,
 		Authenticator:    authenticator(userClient),
 		LoginResponse: func(c *gin.Context, token *core.Token) {
-			c.JSON(http.StatusOK, token)
+			response.Write(c, nil, nil)
 		},
 		LogoutResponse: func(c *gin.Context) {
 			c.JSON(http.StatusOK, nil)
