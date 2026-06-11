@@ -111,7 +111,7 @@ export const errorConfig: RequestConfig = {
           data: resData.data,
           errorCode: resData.code !== 0 ? resData.code : undefined,
           errorMessage: resData.code !== 0 ? resData.message : undefined,
-        };
+        } as any;
       }
       return response;
     },
