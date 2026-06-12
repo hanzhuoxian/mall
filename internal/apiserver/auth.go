@@ -8,8 +8,10 @@ import (
 
 	jwt "github.com/appleboy/gin-jwt/v3"
 	"github.com/appleboy/gin-jwt/v3/core"
-	jwtv5 "github.com/golang-jwt/jwt/v5"
 	"github.com/gin-gonic/gin"
+	jwtv5 "github.com/golang-jwt/jwt/v5"
+	"github.com/mojocn/base64Captcha"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/hanzhuoxian/mall/internal/apiserver/config"
 	"github.com/hanzhuoxian/mall/internal/apiserver/grpcclient"
@@ -22,15 +24,23 @@ import (
 	userv1 "github.com/hanzhuoxian/mall/proto/user/v1"
 )
 
+const (
+	loginFailKeyPrefix = "login:fail:"
+	loginFailThreshold = 2 // 连续失败次数达到此值后要求验证码
+	loginFailExpiry    = 15 * time.Minute
+)
+
 type loginInfo struct {
-	Identifier string `form:"identifier" json:"identifier" binding:"required"`
-	Password   string `form:"password" json:"password" binding:"required"`
+	Identifier  string `form:"identifier"   json:"identifier"   binding:"required"`
+	Password    string `form:"password"     json:"password"     binding:"required"`
+	CaptchaID   string `form:"captcha_id"   json:"captcha_id"`
+	CaptchaCode string `form:"captcha_code" json:"captcha_code"`
 }
 
 // NewAutoAuth 创建 Auto 认证策略，根据 Authorization 头自动选择 Basic 或 JWT。
-// cfg 和 userClient 均由 Wire 注入。
-func NewAutoAuth(cfg *config.Config, userClient *grpcclient.UserClient) middleware.AuthStrategy {
-	return auth.NewAutoStrategy(NewBasicAuth(userClient), NewJWTAuth(cfg, userClient))
+// cfg、userClient、captcha 和 rdb 均由 Wire 注入。
+func NewAutoAuth(cfg *config.Config, userClient *grpcclient.UserClient, captcha *base64Captcha.Captcha, rdb redis.UniversalClient) middleware.AuthStrategy {
+	return auth.NewAutoStrategy(NewBasicAuth(userClient), NewJWTAuth(cfg, userClient, captcha, rdb))
 }
 
 func NewBasicAuth(userClient *grpcclient.UserClient) auth.BasicStrategy {
@@ -46,20 +56,15 @@ func NewBasicAuth(userClient *grpcclient.UserClient) auth.BasicStrategy {
 	})
 }
 
-func NewJWTAuth(cfg *config.Config, userClient *grpcclient.UserClient) auth.JWTStrategy {
+func NewJWTAuth(cfg *config.Config, userClient *grpcclient.UserClient, captcha *base64Captcha.Captcha, rdb redis.UniversalClient) auth.JWTStrategy {
 	ginjwt, _ := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:            "mall",
 		SigningAlgorithm: "HS256",
 		Key:              []byte(cfg.ServerRunOptions.JWTSecret),
 		Timeout:          time.Hour,
 		MaxRefresh:       time.Hour * 24,
-		Authenticator: authenticator(userClient),
-		PayloadFunc: func(data any) jwtv5.MapClaims {
-			if instanceID, ok := data.(string); ok {
-				return jwtv5.MapClaims{middleware.UserIdentifier: instanceID}
-			}
-			return jwtv5.MapClaims{}
-		},
+		Authenticator:    authenticator(userClient, captcha, rdb),
+		PayloadFunc:      payload(),
 		LoginResponse: func(c *gin.Context, token *core.Token) {
 			response.Success(c, token)
 		},
@@ -80,19 +85,47 @@ func NewJWTAuth(cfg *config.Config, userClient *grpcclient.UserClient) auth.JWTS
 	return auth.NewJWTStrategy(*ginjwt)
 }
 
-func authenticator(userClient *grpcclient.UserClient) func(c *gin.Context) (any, error) {
+func authenticator(userClient *grpcclient.UserClient, captcha *base64Captcha.Captcha, rdb redis.UniversalClient) func(c *gin.Context) (any, error) {
 	return func(c *gin.Context) (any, error) {
 		var login loginInfo
 		var err error
 
-		if strings.HasPrefix(c.Request.Header.Get("Authorization"), "Basic") {
+		isBasic := strings.HasPrefix(c.Request.Header.Get("Authorization"), "Basic")
+		if isBasic {
 			login, err = parseWithHeader(c)
 		} else {
 			login, err = parseWithBody(c)
 		}
-
 		if err != nil {
 			return "", jwt.ErrFailedAuthentication
+		}
+
+		if !isBasic {
+			ctx := context.Background()
+			failKey := loginFailKeyPrefix + login.Identifier
+			failCount, _ := rdb.Get(ctx, failKey).Int()
+			if failCount >= loginFailThreshold {
+				if !captcha.Verify(login.CaptchaID, login.CaptchaCode, true) {
+					return "", errors.New(coder.ErrCaptchaInvalid, "captcha invalid or expired")
+				}
+			}
+
+			resp, err := userClient.AuthenticateUser(ctx, &userv1.AuthenticateUserRequest{
+				Identifier: login.Identifier,
+				Password:   login.Password,
+			})
+			if err != nil {
+				// 失败计数：第一次失败时设置过期时间
+				count, _ := rdb.Incr(ctx, failKey).Result()
+				if count == 1 {
+					rdb.Expire(ctx, failKey, loginFailExpiry)
+				}
+				log.Errorf("authenticate user %q failed: %v", login.Identifier, err)
+				return "", errors.New(coder.ErrPasswordIncorrect, "password incorrect")
+			}
+			// 登录成功，清除失败计数
+			rdb.Del(ctx, failKey)
+			return resp.InstanceId, nil
 		}
 
 		resp, err := userClient.AuthenticateUser(context.Background(), &userv1.AuthenticateUserRequest{
@@ -104,6 +137,14 @@ func authenticator(userClient *grpcclient.UserClient) func(c *gin.Context) (any,
 			return "", errors.New(coder.ErrPasswordIncorrect, "password incorrect")
 		}
 		return resp.InstanceId, nil
+	}
+}
+func payload() func(data any) jwtv5.MapClaims {
+	return func(data any) jwtv5.MapClaims {
+		if instanceID, ok := data.(string); ok {
+			return jwtv5.MapClaims{middleware.UserIdentifier: instanceID}
+		}
+		return jwtv5.MapClaims{}
 	}
 }
 

@@ -12,6 +12,7 @@ type Options struct {
 	InsecureServingOptions *pkgoptions.InsecureServingOptions `json:"insecure" mapstructure:"insecure"`
 	ServerRunOptions       *pkgoptions.ServerRunOptions       `json:"server" mapstructure:"server"`
 	UserServiceOptions     *pkgoptions.GRPCOptions            `json:"user-service" mapstructure:"user-service"`
+	RedisOptions           *pkgoptions.RedisOptions           `json:"redis" mapstructure:"redis"`
 	LogOptions             *log.Options                       `json:"log"      mapstructure:"log"`
 }
 
@@ -23,6 +24,7 @@ func NewOptions() *Options {
 		InsecureServingOptions: insecureServing,
 		ServerRunOptions:       pkgoptions.NewServerOptions(),
 		UserServiceOptions:     pkgoptions.NewGRPCOptions(),
+		RedisOptions:           pkgoptions.NewRedisOptions(),
 		LogOptions:             log.NewOptions(),
 	}
 }
@@ -31,6 +33,7 @@ func NewOptions() *Options {
 func (o *Options) Flags() (nfs nflag.NamedFlagSets) {
 	o.InsecureServingOptions.AddFlags(nfs.FlagSet("insecure"))
 	o.UserServiceOptions.AddFlags(nfs.FlagSet("user-service"))
+	o.RedisOptions.AddFlags(nfs.FlagSet("redis"))
 	o.LogOptions.AddFlags(nfs.FlagSet("log"))
 	return nfs
 }
@@ -40,6 +43,7 @@ func (o *Options) Validate() []error {
 	var errs []error
 	errs = append(errs, o.InsecureServingOptions.Validate()...)
 	errs = append(errs, o.UserServiceOptions.Validate()...)
+	errs = append(errs, o.RedisOptions.Validate()...)
 	errs = append(errs, o.LogOptions.Validate()...)
 	return errs
 }

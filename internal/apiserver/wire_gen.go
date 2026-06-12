@@ -24,10 +24,16 @@ func initApiServer(cfg *config.Config) (*apiserver, error) {
 	if err != nil {
 		return nil, err
 	}
+	redisClient, err := provideRedis(cfg)
+	if err != nil {
+		return nil, err
+	}
+	captcha := provideCaptcha(redisClient)
 	userController := controller.NewUserController(userClient)
-	controllers := controller.NewControllers(userController)
-	authStrategy := NewAutoAuth(cfg, userClient)
-	jwtStrategy := NewJWTAuth(cfg, userClient)
+	captchaController := controller.NewCaptchaController(captcha)
+	controllers := controller.NewControllers(userController, captchaController)
+	authStrategy := NewAutoAuth(cfg, userClient, captcha, redisClient)
+	jwtStrategy := NewJWTAuth(cfg, userClient, captcha, redisClient)
 	apiserverApiserver, err := newApiServer(gracefulShutdown, apiServer, controllers, authStrategy, jwtStrategy)
 	if err != nil {
 		return nil, err

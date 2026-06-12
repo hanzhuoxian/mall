@@ -21,6 +21,10 @@ func initApiServer(cfg *config.Config) (*apiserver, error) {
 		// grpc
 		provideUserClient,
 
+		// redis & captcha
+		provideRedis,
+		provideCaptcha,
+
 		// auth
 		NewAutoAuth,
 		NewJWTAuth,

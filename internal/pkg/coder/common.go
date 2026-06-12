@@ -26,6 +26,7 @@ const (
 	ErrMissingHeader
 	ErrPasswordIncorrect
 	ErrPermissionDenied
+	ErrCaptchaInvalid
 )
 
 func init() {
@@ -44,6 +45,7 @@ func init() {
 	register(ErrMissingHeader, http.StatusUnauthorized, "Authorization header is missing", "")
 	register(ErrPasswordIncorrect, http.StatusUnauthorized, "Password is incorrect", "")
 	register(ErrPermissionDenied, http.StatusForbidden, "Permission denied", "")
+	register(ErrCaptchaInvalid, http.StatusBadRequest, "Captcha is invalid or expired", "")
 }
 
 func register(code errors.ErrorCode, status int, msg string, ref string) {

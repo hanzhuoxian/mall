@@ -9,6 +9,7 @@ import (
 )
 
 func installRoutes(r *gin.Engine, controllers *controller.Controllers, authStrategy middleware.AuthStrategy, jwtStrategy auth.JWTStrategy) {
+	r.GET("/captcha", controllers.Captcha.Generate)
 	r.POST("/login", jwtStrategy.LoginHandler)
 	r.POST("/logout", jwtStrategy.LogoutHandler)
 	r.POST("/refresh", jwtStrategy.RefreshHandler)
