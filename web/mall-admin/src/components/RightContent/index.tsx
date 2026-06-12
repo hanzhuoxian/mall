@@ -16,11 +16,6 @@ export const localeLabelMap: Record<string, { emoji: string; label: string }> =
     'zh-CN': { emoji: '🇨🇳', label: '简体中文' },
     'zh-TW': { emoji: '🇭🇰', label: '繁體中文' },
     'en-US': { emoji: '🇺🇸', label: 'English' },
-    'ja-JP': { emoji: '🇯🇵', label: '日本語' },
-    'pt-BR': { emoji: '🇧🇷', label: 'Português' },
-    'id-ID': { emoji: '🇮🇩', label: 'Bahasa Indonesia' },
-    'fa-IR': { emoji: '🇮🇷', label: 'فارسی' },
-    'bn-BD': { emoji: '🇧🇩', label: 'বাংলা' },
   };
 
 const useStyles = createStyles(({ token, css }) => ({
@@ -54,10 +49,6 @@ export const DocLink: React.FC = () => {
 };
 
 const versionItems: MenuProps['items'] = [
-  { key: 'https://v5.pro.ant.design', label: 'v5' },
-  { key: 'https://v4.pro.ant.design', label: 'v4' },
-  { key: 'https://v2.pro.ant.design', label: 'v2' },
-  { key: 'https://v1.pro.ant.design', label: 'v1' },
 ];
 
 const onVersionClick: MenuProps['onClick'] = ({ key }) => {

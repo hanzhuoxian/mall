@@ -2,8 +2,13 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
+
 	"github.com/hanzhuoxian/mall/internal/types"
 	"github.com/hanzhuoxian/mall/internal/userserver/store"
 	"github.com/hanzhuoxian/mall/pkg/auth"
@@ -142,7 +147,13 @@ func (s *userSrv) AuthenticateUser(ctx context.Context, req *userv1.Authenticate
 		user, err = s.store.Users().Get(ctx, req.Identifier, types.GetOptions{})
 	}
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
 		return nil, err
+	}
+	if err := auth.ComparePassword(user.Password, req.Password); err != nil {
+		return nil, status.Error(codes.Unauthenticated, "password incorrect")
 	}
 	return &userv1.AuthenticateUserResponse{InstanceId: user.InstanceID}, nil
 }

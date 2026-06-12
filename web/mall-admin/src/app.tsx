@@ -12,12 +12,10 @@ dayjs.extend(relativeTime);
 
 import {
   AvatarDropdown,
-  DocLink,
   ErrorBoundary,
   Footer,
   LangDropdown,
   OfflineBanner,
-  VersionDropdown,
 } from '@/components';
 import { getCurrentUser } from '@/pages/user/login/service';
 import defaultSettings from '../config/defaultSettings';
@@ -42,7 +40,7 @@ export async function getInitialState(): Promise<{
       if (msg.success && msg.data?.user) {
         const u = msg.data.user;
         return {
-          name: u.name,
+          name: u.nickname || u.username || u.name,
           email: u.email,
           userid: u.instanceId,
           phone: u.phone,
@@ -96,19 +94,13 @@ export const layout: RunTimeLayoutConfig = ({
       return dom;
     },
     actionsRender: () => {
-      // `locale: false` opts out of the language switcher. ProLayout's own
-      // `locale` prop is a locale string, so narrow to the boolean toggle here.
       const localeEnabled =
         (initialState?.settings as { locale?: boolean })?.locale !== false;
-      return [
-        <DocLink key="doc" />,
-        <VersionDropdown key="version" />,
-        localeEnabled && <LangDropdown key="lang" />,
-      ].filter(Boolean);
+      return [localeEnabled && <LangDropdown key="lang" />].filter(Boolean);
     },
     avatarProps: {
       src: initialState?.currentUser?.avatar,
-      title: 'ProUser',
+      title: initialState?.currentUser?.name,
       render: (_, avatarChildren) => (
         <AvatarDropdown>{avatarChildren}</AvatarDropdown>
       ),

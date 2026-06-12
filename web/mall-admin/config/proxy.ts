@@ -21,6 +21,7 @@ export default {
     '/login': backendProxy,
     '/logout': backendProxy,
     '/refresh': backendProxy,
+    '/captcha': backendProxy,
   },
   /**
    * @name 详细的代理配置
@@ -32,6 +33,7 @@ export default {
     '/login': backendProxy,
     '/logout': backendProxy,
     '/refresh': backendProxy,
+    '/captcha': backendProxy,
   },
   pre: {
     '/api/': {

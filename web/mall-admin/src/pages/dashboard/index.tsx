@@ -40,22 +40,22 @@ const Dashboard: React.FC = () => {
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={6}>
           <Card>
-            <Statistic title="今日销售额" value={12680} prefix="¥" precision={2} valueStyle={{ color: '#1677ff' }} />
+            <Statistic title="今日销售额" value={12680} prefix="¥" precision={2} styles={{ content: { color: '#1677ff' } }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="今日订单数" value={128} valueStyle={{ color: '#52c41a' }} />
+            <Statistic title="今日订单数" value={128} styles={{ content: { color: '#52c41a' } }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="商品总数" value={864} valueStyle={{ color: '#faad14' }} />
+            <Statistic title="商品总数" value={864} styles={{ content: { color: '#faad14' } }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="用户总数" value={3256} valueStyle={{ color: '#722ed1' }} />
+            <Statistic title="用户总数" value={3256} styles={{ content: { color: '#722ed1' } }} />
           </Card>
         </Col>
       </Row>

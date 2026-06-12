@@ -2,6 +2,7 @@ import {
   AlipayCircleOutlined,
   LockOutlined,
   MobileOutlined,
+  ReloadOutlined,
   TaobaoCircleOutlined,
   UserOutlined,
   WeiboCircleOutlined,
@@ -19,12 +20,12 @@ import {
   useIntl,
   useModel,
 } from '@umijs/max';
-import { Alert, App, Tabs } from 'antd';
+import { Alert, App, Form, Input, Tabs } from 'antd';
 import { createStyles } from 'antd-style';
-import React, { startTransition, useState } from 'react';
+import React, { startTransition, useEffect, useState } from 'react';
 import { Footer } from '@/components';
 import { getFakeCaptcha } from '@/services/ant-design-pro/login';
-import { login } from './service';
+import { getCaptcha, login } from './service';
 import Settings from '../../../../config/defaultSettings';
 
 const useStyles = createStyles(({ token }) => {
@@ -109,13 +110,35 @@ const LoginMessage: React.FC<{
   );
 };
 
+// Matches backend coder.ErrCaptchaInvalid
+const ERR_CAPTCHA_INVALID = 100207;
+
 const Login: React.FC = () => {
-  const [loginFailed, setLoginFailed] = useState(false);
+  const [failCount, setFailCount] = useState(0);
   const [type, setType] = useState<string>('account');
+  const [captchaId, setCaptchaId] = useState<string>('');
+  const [captchaImage, setCaptchaImage] = useState<string>('');
   const { initialState, setInitialState } = useModel('@@initialState');
   const { styles } = useStyles();
   const { message } = App.useApp();
   const intl = useIntl();
+
+  // Matches backend loginFailThreshold = 2
+  const showCaptcha = failCount >= 2;
+
+  const refreshCaptcha = async () => {
+    const res = await getCaptcha();
+    if (res?.success) {
+      setCaptchaId(res.data.id);
+      setCaptchaImage(res.data.image);
+    }
+  };
+
+  useEffect(() => {
+    if (showCaptcha) {
+      refreshCaptcha();
+    }
+  }, [showCaptcha]);
 
   /**
    * Validate redirect URL to prevent open redirect attacks
@@ -150,13 +173,16 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (values: API.LoginParams) => {
+  const handleSubmit = async (values: API.LoginParams & { captcha_code?: string }) => {
     try {
       const msg = await login({
         identifier: values.username!,
         password: values.password!,
+        captcha_id: captchaId,
+        captcha_code: values.captcha_code,
       });
       if (msg.success) {
+        setFailCount(0);
         localStorage.setItem('token', msg.data.access_token);
         message.success(intl.formatMessage({ id: 'pages.login.success', defaultMessage: '登录成功！' }));
         await fetchUserInfo();
@@ -164,10 +190,14 @@ const Login: React.FC = () => {
         window.location.href = getSafeRedirectUrl(urlParams.get('redirect'));
         return;
       }
-      setLoginFailed(true);
-    } catch (error) {
-      console.log(error);
-      message.error(intl.formatMessage({ id: 'pages.login.failure', defaultMessage: '登录失败，请重试！' }));
+    } catch (error: any) {
+      const errorCode = error?.info?.errorCode as number | undefined;
+      // If server says captcha is required/invalid, force-show captcha
+      const next = errorCode === ERR_CAPTCHA_INVALID
+        ? Math.max(failCount + 1, 2)
+        : failCount + 1;
+      setFailCount(next);
+      if (next >= 2) refreshCaptcha();
     }
   };
 
@@ -236,7 +266,7 @@ const Login: React.FC = () => {
             ]}
           />
 
-          {loginFailed && type === 'account' && (
+          {failCount > 0 && type === 'account' && (
             <LoginMessage
               content={intl.formatMessage({
                 id: 'pages.login.accountLogin.errorMessage',
@@ -290,10 +320,34 @@ const Login: React.FC = () => {
                   },
                 ]}
               />
+              {showCaptcha && (
+                <Form.Item style={{ marginBottom: 24 }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <img
+                      src={captchaImage}
+                      alt="验证码"
+                      style={{ height: 40, cursor: 'pointer', borderRadius: 4, border: '1px solid #d9d9d9', flexShrink: 0 }}
+                      onClick={refreshCaptcha}
+                      title="点击刷新"
+                    />
+                    <ReloadOutlined
+                      style={{ fontSize: 14, color: '#999', cursor: 'pointer', flexShrink: 0 }}
+                      onClick={refreshCaptcha}
+                    />
+                    <Form.Item
+                      name="captcha_code"
+                      noStyle
+                      rules={[{ required: true, message: '请输入验证码' }]}
+                    >
+                      <Input size="large" placeholder="请输入验证码" />
+                    </Form.Item>
+                  </div>
+                </Form.Item>
+              )}
             </>
           )}
 
-          {loginFailed && type === 'mobile' && (
+          {failCount > 0 && type === 'mobile' && (
             <LoginMessage content="验证码错误" />
           )}
           {type === 'mobile' && (
