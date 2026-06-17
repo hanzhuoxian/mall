@@ -3,7 +3,7 @@ package apiserver
 import (
 	"github.com/hanzhuoxian/mall/internal/apiserver/options"
 	"github.com/hanzhuoxian/mall/pkg/app"
-	"github.com/hanzhuoxian/mall/pkg/log"
+	"github.com/hanzhuoxian/mall/pkg/logger"
 )
 
 // commandDesc 是用户服务命令行的长描述，展示在 --help 输出中。
@@ -25,8 +25,8 @@ func NewApp(basename string) *app.App {
 
 func run(opts *options.Options) app.RunFunc {
 	return func(basename string) error {
-		log.Init(opts.LogOptions)
-		defer log.Flush()
+		logger.Init(opts.LogOptions)
+		defer logger.Flush()
 
 		return Run(opts)
 	}

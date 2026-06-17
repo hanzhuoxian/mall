@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hanzhuoxian/mall/pkg/logger"
 	"go.uber.org/zap"
 	gormlogger "gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
-
-	"github.com/hanzhuoxian/mall/pkg/log"
 )
 
 // GormLogger 是基于 zap 的 GORM 日志实现，支持日志级别控制、慢查询阈值告警
@@ -29,7 +28,7 @@ var _ gormlogger.Interface = (*GormLogger)(nil)
 // NewGormLogger 创建一个 GormLogger 实例，慢查询阈值默认为 200ms，忽略 RecordNotFound 错误。
 func NewGormLogger(level gormlogger.LogLevel) *GormLogger {
 	return &GormLogger{
-		logger:                    log.ZapLogger(),
+		logger:                    logger.ZapLogger(),
 		logLevel:                  gormlogger.LogLevel(level),
 		slowThreshold:             200 * time.Millisecond,
 		ignoreRecordNotFoundError: true,

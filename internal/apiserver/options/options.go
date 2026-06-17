@@ -3,7 +3,7 @@ package options
 
 import (
 	pkgoptions "github.com/hanzhuoxian/mall/internal/pkg/options"
-	"github.com/hanzhuoxian/mall/pkg/log"
+	"github.com/hanzhuoxian/mall/pkg/logger"
 	"github.com/hanzhuoxian/mall/pkg/nflag"
 )
 
@@ -13,7 +13,7 @@ type Options struct {
 	ServerRunOptions       *pkgoptions.ServerRunOptions       `json:"server" mapstructure:"server"`
 	UserServiceOptions     *pkgoptions.GRPCOptions            `json:"user-service" mapstructure:"user-service"`
 	RedisOptions           *pkgoptions.RedisOptions           `json:"redis" mapstructure:"redis"`
-	LogOptions             *log.Options                       `json:"log"      mapstructure:"log"`
+	LogOptions             *logger.Options                    `json:"log"      mapstructure:"log"`
 }
 
 // NewOptions 返回带有各子系统默认值的 Options 实例。
@@ -25,7 +25,7 @@ func NewOptions() *Options {
 		ServerRunOptions:       pkgoptions.NewServerOptions(),
 		UserServiceOptions:     pkgoptions.NewGRPCOptions(),
 		RedisOptions:           pkgoptions.NewRedisOptions(),
-		LogOptions:             log.NewOptions(),
+		LogOptions:             logger.NewOptions(),
 	}
 }
 

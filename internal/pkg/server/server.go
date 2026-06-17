@@ -14,7 +14,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
-	"github.com/hanzhuoxian/mall/pkg/log"
+	"github.com/hanzhuoxian/mall/pkg/logger"
 	"github.com/hanzhuoxian/mall/pkg/version"
 )
 
@@ -161,13 +161,13 @@ func (s *APIServer) Close() {
 
 	if s.secureServer != nil {
 		if err := s.secureServer.Shutdown(ctx); err != nil {
-			log.Warnf("Shutdown secure server failed: %s", err.Error())
+			logger.Warnf("Shutdown secure server failed: %s", err.Error())
 		}
 	}
 
 	if s.insecureServer != nil {
 		if err := s.insecureServer.Shutdown(ctx); err != nil {
-			log.Warnf("Shutdown insecure server failed: %s", err.Error())
+			logger.Warnf("Shutdown insecure server failed: %s", err.Error())
 		}
 	}
 }

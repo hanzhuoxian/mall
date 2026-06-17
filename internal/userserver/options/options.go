@@ -5,7 +5,7 @@ package options
 import (
 	pkgoptions "github.com/hanzhuoxian/mall/internal/pkg/options"
 	"github.com/hanzhuoxian/mall/internal/pkg/server"
-	"github.com/hanzhuoxian/mall/pkg/log"
+	"github.com/hanzhuoxian/mall/pkg/logger"
 	"github.com/hanzhuoxian/mall/pkg/nflag"
 )
 
@@ -15,7 +15,7 @@ type Options struct {
 	MySQLOptions           *pkgoptions.MySQLOptions           `json:"mysql"    mapstructure:"mysql"`
 	GRPCOptions            *pkgoptions.GRPCOptions            `json:"grpc"     mapstructure:"grpc"`
 	InsecureServingOptions *pkgoptions.InsecureServingOptions `json:"insecure" mapstructure:"insecure"`
-	LogOptions             *log.Options                       `json:"log"      mapstructure:"log"`
+	LogOptions             *logger.Options                    `json:"log"      mapstructure:"log"`
 	RedisOptions           *pkgoptions.RedisOptions           `json:"redis"    mapstructure:"redis"`
 }
 

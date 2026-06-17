@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/hanzhuoxian/mall/pkg/log"
+	"github.com/hanzhuoxian/mall/pkg/logger"
 	"github.com/hanzhuoxian/mall/pkg/nflag"
 	"github.com/hanzhuoxian/mall/pkg/term"
 	"github.com/hanzhuoxian/mall/pkg/version"
@@ -181,7 +181,7 @@ func (app *App) buildCommand() {
 // printWorkingDir 在启动时打印当前工作目录，便于排查路径相关问题。
 func printWorkingDir() {
 	wd, _ := os.Getwd()
-	log.Infof("%v WorkingDir: %s", progressMessage, wd)
+	logger.Infof("%v WorkingDir: %s", progressMessage, wd)
 }
 
 // Command returns cobra command instance inside the application.

@@ -20,7 +20,7 @@ import (
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware/auth"
 	"github.com/hanzhuoxian/mall/internal/pkg/response"
 	"github.com/hanzhuoxian/mall/pkg/errors"
-	"github.com/hanzhuoxian/mall/pkg/log"
+	"github.com/hanzhuoxian/mall/pkg/logger"
 	userv1 "github.com/hanzhuoxian/mall/proto/user/v1"
 )
 
@@ -120,7 +120,7 @@ func authenticator(userClient *grpcclient.UserClient, captcha *base64Captcha.Cap
 				if count == 1 {
 					rdb.Expire(ctx, failKey, loginFailExpiry)
 				}
-				log.Errorf("authenticate user %q failed: %v", login.Identifier, err)
+				logger.Errorf("authenticate user %q failed: %v", login.Identifier, err)
 				return "", errors.New(coder.ErrPasswordIncorrect, "password incorrect")
 			}
 			// 登录成功，清除失败计数
@@ -133,7 +133,7 @@ func authenticator(userClient *grpcclient.UserClient, captcha *base64Captcha.Cap
 			Password:   login.Password,
 		})
 		if err != nil {
-			log.Errorf("authenticate user %q failed: %v", login.Identifier, err)
+			logger.Errorf("authenticate user %q failed: %v", login.Identifier, err)
 			return "", errors.New(coder.ErrPasswordIncorrect, "password incorrect")
 		}
 		return resp.InstanceId, nil
@@ -151,21 +151,21 @@ func payload() func(data any) jwtv5.MapClaims {
 func parseWithHeader(c *gin.Context) (loginInfo, error) {
 	auth := strings.SplitN(c.Request.Header.Get("Authorization"), " ", 2)
 	if len(auth) != 2 || auth[0] != "Basic" {
-		log.Errorf("get basic string from Authorization header failed")
+		logger.Errorf("get basic string from Authorization header failed")
 
 		return loginInfo{}, jwt.ErrFailedAuthentication
 	}
 
 	payload, err := base64.StdEncoding.DecodeString(auth[1])
 	if err != nil {
-		log.Errorf("decode basic string: %s", err.Error())
+		logger.Errorf("decode basic string: %s", err.Error())
 
 		return loginInfo{}, jwt.ErrFailedAuthentication
 	}
 
 	pair := strings.SplitN(string(payload), ":", 2)
 	if len(pair) != 2 {
-		log.Errorf("parse payload failed")
+		logger.Errorf("parse payload failed")
 
 		return loginInfo{}, jwt.ErrFailedAuthentication
 	}
@@ -179,7 +179,7 @@ func parseWithHeader(c *gin.Context) (loginInfo, error) {
 func parseWithBody(c *gin.Context) (loginInfo, error) {
 	var login loginInfo
 	if err := c.ShouldBindJSON(&login); err != nil {
-		log.Errorf("parse login parameters: %s", err.Error())
+		logger.Errorf("parse login parameters: %s", err.Error())
 
 		return loginInfo{}, jwt.ErrFailedAuthentication
 	}

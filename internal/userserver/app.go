@@ -4,7 +4,7 @@ import (
 	"github.com/hanzhuoxian/mall/internal/userserver/config"
 	"github.com/hanzhuoxian/mall/internal/userserver/options"
 	"github.com/hanzhuoxian/mall/pkg/app"
-	"github.com/hanzhuoxian/mall/pkg/log"
+	"github.com/hanzhuoxian/mall/pkg/logger"
 )
 
 // commandDesc 是用户服务命令行的长描述，展示在 --help 输出中。
@@ -29,8 +29,8 @@ func NewApp(basename string) *app.App {
 // run 返回一个 RunFunc，在应用启动时初始化日志、构建配置并运行服务。
 func run(opts *options.Options) app.RunFunc {
 	return func(basename string) error {
-		log.Init(opts.LogOptions)
-		defer log.Flush()
+		logger.Init(opts.LogOptions)
+		defer logger.Flush()
 
 		cfg := config.CreateConfigFromOptions(opts)
 		return Run(cfg)

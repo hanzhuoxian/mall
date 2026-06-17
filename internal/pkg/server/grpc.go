@@ -1,9 +1,9 @@
 package server
 
 import (
-	"log"
 	"net"
 
+	"github.com/hanzhuoxian/mall/pkg/logger"
 	"google.golang.org/grpc"
 )
 
@@ -27,7 +27,7 @@ func (g *GRPCServer) Run() error {
 
 	go func() {
 		if err := g.Serve(listen); err != nil {
-			log.Fatalf("failed to start grpc server: %s", err.Error())
+			logger.Fatalf("failed to start grpc server: %s", err.Error())
 		}
 	}()
 

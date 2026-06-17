@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hanzhuoxian/mall/pkg/errors"
-	"github.com/hanzhuoxian/mall/pkg/log"
+	"github.com/hanzhuoxian/mall/pkg/logger"
 )
 
 // Response is the unified envelope for all API responses.
@@ -46,14 +46,14 @@ func grpcToHTTP(code codes.Code) int {
 func Write(c *gin.Context, err error, data any) {
 	if err != nil {
 		if st, ok := status.FromError(err); ok {
-			log.Errorf("gRPC error: code=%s message=%s", st.Code(), st.Message())
+			logger.Errorf("gRPC error: code=%s message=%s", st.Code(), st.Message())
 			c.JSON(grpcToHTTP(st.Code()), Response{
 				Code:    int(st.Code()),
 				Message: st.Message(),
 			})
 			return
 		}
-		log.Errorf("%v, %+v", err, err)
+		logger.Errorf("%v, %+v", err, err)
 		coder := errors.ParseCoder(err)
 		c.JSON(coder.HTTPStatus(), Response{
 			Code:      int(coder.Code()),

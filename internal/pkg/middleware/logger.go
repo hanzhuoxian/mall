@@ -9,9 +9,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hanzhuoxian/mall/pkg/logger"
 	"github.com/mattn/go-isatty"
-
-	"github.com/hanzhuoxian/mall/pkg/log"
 )
 
 // defaultLogFormatter 默认的日志格式化函数，供 Logger 中间件使用。
@@ -115,7 +114,7 @@ func LoggerWithConfig(conf gin.LoggerConfig) gin.HandlerFunc {
 
 			param.Path = path
 
-			log.L(c).Info(formatter(param))
+			logger.L(c).Info(formatter(param))
 		}
 	}
 }

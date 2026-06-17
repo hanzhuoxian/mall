@@ -1,6 +1,6 @@
 // Package log 基于 go.uber.org/zap 封装了统一的日志库，提供结构化日志、多级别输出、
 // 控制台/JSON 格式、颜色支持及与 context 集成等能力。
-package log
+package logger
 
 import (
 	"encoding/json"
