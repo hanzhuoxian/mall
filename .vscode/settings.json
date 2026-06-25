@@ -9,5 +9,7 @@
         "nflag",
         "mapstructure",
         "gorm",
+        "dbresolver",
+        "dialector"
     ]
 }
