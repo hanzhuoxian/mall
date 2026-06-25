@@ -3,6 +3,13 @@ import { request } from '@umijs/max';
 export type LoginParams = {
   identifier: string;
   password: string;
+  captcha_id?: string;
+  captcha_code?: string;
+};
+
+export type CaptchaData = {
+  id: string;
+  image: string;
 };
 
 export type LoginToken = {
@@ -34,6 +41,14 @@ export async function login(params: LoginParams) {
   return request<ApiResponse<LoginToken>>('/login', {
     method: 'POST',
     data: params,
+    skipErrorHandler: true,
+  });
+}
+
+export async function getCaptcha() {
+  return request<ApiResponse<CaptchaData>>('/captcha', {
+    method: 'GET',
+    skipErrorHandler: true,
   });
 }
 

@@ -12,6 +12,8 @@ import (
 	jwtv5 "github.com/golang-jwt/jwt/v5"
 	"github.com/mojocn/base64Captcha"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hanzhuoxian/mall/internal/apiserver/config"
 	"github.com/hanzhuoxian/mall/internal/apiserver/grpcclient"
@@ -120,7 +122,7 @@ func authenticator(userClient *grpcclient.UserClient, captcha *base64Captcha.Cap
 				if count == 1 {
 					rdb.Expire(ctx, failKey, loginFailExpiry)
 				}
-				logger.Errorf("authenticate user %q failed: %v", login.Identifier, err)
+				logAuthError(login.Identifier, err)
 				return "", errors.New(coder.ErrPasswordIncorrect, "password incorrect")
 			}
 			// 登录成功，清除失败计数
@@ -133,12 +135,13 @@ func authenticator(userClient *grpcclient.UserClient, captcha *base64Captcha.Cap
 			Password:   login.Password,
 		})
 		if err != nil {
-			logger.Errorf("authenticate user %q failed: %v", login.Identifier, err)
+			logAuthError(login.Identifier, err)
 			return "", errors.New(coder.ErrPasswordIncorrect, "password incorrect")
 		}
 		return resp.InstanceId, nil
 	}
 }
+
 func payload() func(data any) jwtv5.MapClaims {
 	return func(data any) jwtv5.MapClaims {
 		if instanceID, ok := data.(string); ok {
@@ -185,4 +188,16 @@ func parseWithBody(c *gin.Context) (loginInfo, error) {
 	}
 
 	return login, nil
+}
+
+// logAuthError logs auth failures at WARN for expected cases (user not found,
+// wrong password) and ERROR for unexpected internal failures.
+func logAuthError(identifier string, err error) {
+	st, _ := status.FromError(err)
+	switch st.Code() {
+	case codes.NotFound, codes.Unauthenticated:
+		logger.Warnf("authenticate user %q failed: %s", identifier, st.Message())
+	default:
+		logger.Errorf("authenticate user %q failed: %v", identifier, err)
+	}
 }
