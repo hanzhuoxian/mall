@@ -28,7 +28,7 @@ func newInitAdminOptions() *initAdminOptions {
 	return &initAdminOptions{
 		MySQL:    options.NewMySQLOptions(),
 		Username: admin.AdminUserName,
-		Nickname: "Administrator",
+		Nickname: "Admin",
 	}
 }
 

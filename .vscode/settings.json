@@ -10,6 +10,7 @@
         "mapstructure",
         "gorm",
         "dbresolver",
-        "dialector"
+        "dialector",
+        "mallctl"
     ]
 }
