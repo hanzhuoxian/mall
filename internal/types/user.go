@@ -20,14 +20,14 @@ type User struct {
 	LoginedAt  *time.Time `json:"loginedAt,omitempty" gorm:"column:logined_at"`
 }
 
+func (u *User) TableName() string {
+	return "user"
+}
+
 type UserList struct {
 	ListMeta `json:",inline"`
 
 	Items []*User `json:"items"`
-}
-
-func (u *User) TableName() string {
-	return "user"
 }
 
 func (u *User) Compare(password string) error {

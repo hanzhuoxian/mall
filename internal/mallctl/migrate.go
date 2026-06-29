@@ -44,6 +44,7 @@ func newMigrateCmd() *app.Command {
 func runMigrate(opts *migrateOptions) error {
 	userModels := []any{
 		&types.User{},
+		&types.SysRole{},
 	}
 	if err := migrateDB(opts.MySQL, "mall_user", userModels...); err != nil {
 		return err
