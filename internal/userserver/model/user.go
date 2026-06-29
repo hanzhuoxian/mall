@@ -1,4 +1,4 @@
-package types
+package model
 
 import (
 	"fmt"
@@ -11,13 +11,13 @@ import (
 
 type User struct {
 	ObjectMeta `json:"metadata,omitempty"`
-	Username   string     `json:"username" gorm:"column:username" validate:"omitempty"`
-	Email      string     `json:"email" gorm:"column:email" validate:"required,email,min=1,max=100"`
-	Phone      string     `json:"phone" gorm:"column:phone" validate:"omitempty"`
-	Nickname   string     `json:"nickname" gorm:"column:nickname" validate:"required,min=1,max=30"`
-	Password   string     `json:"password,omitempty" gorm:"column:password" validate:"required"`
-	Status     int        `json:"status" gorm:"column:status" validate:"omitempty"`
-	LoginedAt  *time.Time `json:"loginedAt,omitempty" gorm:"column:logined_at"`
+	Username   string     `json:"username" gorm:"column:username;comment:用户名" validate:"omitempty"`
+	Email      string     `json:"email" gorm:"column:email;comment:邮箱" validate:"required,email,min=1,max=100"`
+	Phone      string     `json:"phone" gorm:"column:phone;comment:手机号" validate:"omitempty"`
+	Nickname   string     `json:"nickname" gorm:"column:nickname;comment:昵称" validate:"required,min=1,max=30"`
+	Password   string     `json:"password,omitempty" gorm:"column:password;comment:密码" validate:"required"`
+	Status     int        `json:"status" gorm:"column:status;comment:状态 1启用 0禁用" validate:"omitempty"`
+	LoginedAt  *time.Time `json:"loginedAt,omitempty" gorm:"column:logined_at;comment:最后登录时间"`
 }
 
 func (u *User) TableName() string {

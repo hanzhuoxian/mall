@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
-	"github.com/hanzhuoxian/mall/internal/types"
+	usermodel "github.com/hanzhuoxian/mall/internal/userserver/model"
 	"github.com/hanzhuoxian/mall/pkg/app"
 	"github.com/hanzhuoxian/mall/pkg/nflag"
 )
@@ -43,8 +43,8 @@ func newMigrateCmd() *app.Command {
 
 func runMigrate(opts *migrateOptions) error {
 	userModels := []any{
-		&types.User{},
-		&types.SysRole{},
+		&usermodel.User{},
+		&usermodel.SysRole{},
 	}
 	if err := migrateDB(opts.MySQL, "mall_user", userModels...); err != nil {
 		return err

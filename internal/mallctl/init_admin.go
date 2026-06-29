@@ -10,7 +10,7 @@ import (
 
 	"github.com/hanzhuoxian/mall/internal/pkg/admin"
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
-	"github.com/hanzhuoxian/mall/internal/types"
+	usermodel "github.com/hanzhuoxian/mall/internal/userserver/model"
 	"github.com/hanzhuoxian/mall/pkg/app"
 	"github.com/hanzhuoxian/mall/pkg/auth"
 	"github.com/hanzhuoxian/mall/pkg/nflag"
@@ -78,7 +78,7 @@ func runInitAdmin(opts *initAdminOptions) error {
 
 	ctx := context.Background()
 
-	existing := &types.User{}
+	existing := &usermodel.User{}
 	err = db.WithContext(ctx).Where("username = ?", opts.Username).First(existing).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("query user: %w", err)
@@ -93,8 +93,8 @@ func runInitAdmin(opts *initAdminOptions) error {
 		return fmt.Errorf("hash password: %w", err)
 	}
 
-	user := &types.User{
-		ObjectMeta: types.ObjectMeta{
+	user := &usermodel.User{
+		ObjectMeta: usermodel.ObjectMeta{
 			InstanceID: uuid.New().String(),
 			Name:       opts.Username,
 		},

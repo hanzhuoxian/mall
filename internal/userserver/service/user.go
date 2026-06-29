@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 
-	"github.com/hanzhuoxian/mall/internal/types"
+	"github.com/hanzhuoxian/mall/internal/userserver/model"
 	"github.com/hanzhuoxian/mall/internal/userserver/store"
 	"github.com/hanzhuoxian/mall/pkg/auth"
 	"github.com/hanzhuoxian/mall/pkg/regex"
@@ -49,8 +49,8 @@ func (s *userSrv) Create(ctx context.Context, req *userv1.CreateUserRequest) (*u
 	if err != nil {
 		return nil, err
 	}
-	user := &types.User{
-		ObjectMeta: types.ObjectMeta{
+	user := &model.User{
+		ObjectMeta: model.ObjectMeta{
 			InstanceID: uuid.New().String(),
 			Name:       req.Name,
 		},
@@ -60,14 +60,14 @@ func (s *userSrv) Create(ctx context.Context, req *userv1.CreateUserRequest) (*u
 		Nickname: req.Nickname,
 		Password: hashedPassword,
 	}
-	if err := s.store.Users().Create(ctx, user, types.CreateOptions{}); err != nil {
+	if err := s.store.Users().Create(ctx, user, model.CreateOptions{}); err != nil {
 		return nil, err
 	}
 	return &userv1.CreateUserResponse{User: user.ToProto()}, nil
 }
 
 func (s *userSrv) Update(ctx context.Context, req *userv1.UpdateUserRequest) (*userv1.UpdateUserResponse, error) {
-	user, err := s.store.Users().GetByInstanceID(ctx, req.InstanceId, types.GetOptions{})
+	user, err := s.store.Users().GetByInstanceID(ctx, req.InstanceId, model.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -90,24 +90,24 @@ func (s *userSrv) Update(ctx context.Context, req *userv1.UpdateUserRequest) (*u
 	if req.Status != 0 {
 		user.Status = int(req.Status)
 	}
-	if err := s.store.Users().Update(ctx, user, types.UpdateOptions{}); err != nil {
+	if err := s.store.Users().Update(ctx, user, model.UpdateOptions{}); err != nil {
 		return nil, err
 	}
 	return &userv1.UpdateUserResponse{User: user.ToProto()}, nil
 }
 
 func (s *userSrv) Delete(ctx context.Context, req *userv1.DeleteUserRequest) (*userv1.DeleteUserResponse, error) {
-	err := s.store.Users().Delete(ctx, req.InstanceId, types.DeleteOptions{Unscoped: req.Unscoped})
+	err := s.store.Users().Delete(ctx, req.InstanceId, model.DeleteOptions{Unscoped: req.Unscoped})
 	return &userv1.DeleteUserResponse{}, err
 }
 
 func (s *userSrv) DeleteCollection(ctx context.Context, req *userv1.DeleteCollectionRequest) (*userv1.DeleteCollectionResponse, error) {
-	err := s.store.Users().DeleteCollection(ctx, req.InstanceIds, types.DeleteOptions{Unscoped: req.Unscoped})
+	err := s.store.Users().DeleteCollection(ctx, req.InstanceIds, model.DeleteOptions{Unscoped: req.Unscoped})
 	return &userv1.DeleteCollectionResponse{}, err
 }
 
 func (s *userSrv) Get(ctx context.Context, req *userv1.GetUserRequest) (*userv1.GetUserResponse, error) {
-	user, err := s.store.Users().GetByInstanceID(ctx, req.InstanceId, types.GetOptions{})
+	user, err := s.store.Users().GetByInstanceID(ctx, req.InstanceId, model.GetOptions{})
 	return &userv1.GetUserResponse{User: user.ToProto()}, err
 }
 
@@ -121,7 +121,7 @@ func (s *userSrv) List(ctx context.Context, req *userv1.ListUsersRequest) (*user
 		page = 1
 	}
 	offset := (page - 1) * pageSize
-	userList, err := s.store.Users().List(ctx, types.ListOptions{
+	userList, err := s.store.Users().List(ctx, model.ListOptions{
 		Offset: &offset,
 		Limit:  &pageSize,
 	})
@@ -136,15 +136,15 @@ func (s *userSrv) List(ctx context.Context, req *userv1.ListUsersRequest) (*user
 }
 
 func (s *userSrv) AuthenticateUser(ctx context.Context, req *userv1.AuthenticateUserRequest) (*userv1.AuthenticateUserResponse, error) {
-	var user *types.User
+	var user *model.User
 	var err error
 	switch DetectIdentifierType(req.Identifier) {
 	case IdentifierEmail:
-		user, err = s.store.Users().GetByEmail(ctx, req.Identifier, types.GetOptions{})
+		user, err = s.store.Users().GetByEmail(ctx, req.Identifier, model.GetOptions{})
 	case IdentifierPhone:
-		user, err = s.store.Users().GetByPhone(ctx, req.Identifier, types.GetOptions{})
+		user, err = s.store.Users().GetByPhone(ctx, req.Identifier, model.GetOptions{})
 	default:
-		user, err = s.store.Users().Get(ctx, req.Identifier, types.GetOptions{})
+		user, err = s.store.Users().Get(ctx, req.Identifier, model.GetOptions{})
 	}
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
