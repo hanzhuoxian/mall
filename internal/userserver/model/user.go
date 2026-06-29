@@ -9,35 +9,35 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type User struct {
+type SysUser struct {
 	ObjectMeta `json:"metadata,omitempty"`
-	Username   string     `json:"username" gorm:"column:username;comment:用户名" validate:"omitempty"`
-	Email      string     `json:"email" gorm:"column:email;comment:邮箱" validate:"required,email,min=1,max=100"`
-	Phone      string     `json:"phone" gorm:"column:phone;comment:手机号" validate:"omitempty"`
-	Nickname   string     `json:"nickname" gorm:"column:nickname;comment:昵称" validate:"required,min=1,max=30"`
-	Password   string     `json:"password,omitempty" gorm:"column:password;comment:密码" validate:"required"`
+	Username   string     `json:"username" gorm:"column:username;type:varchar(64);comment:用户名" validate:"omitempty"`
+	Email      string     `json:"email" gorm:"column:email;type:varchar(100);comment:邮箱" validate:"required,email,min=1,max=100"`
+	Phone      string     `json:"phone" gorm:"column:phone;type:varchar(20);comment:手机号" validate:"omitempty"`
+	Nickname   string     `json:"nickname" gorm:"column:nickname;type:varchar(30);comment:昵称" validate:"required,min=1,max=30"`
+	Password   string     `json:"password,omitempty" gorm:"column:password;type:varchar(255);comment:密码" validate:"required"`
 	Status     int        `json:"status" gorm:"column:status;comment:状态 1启用 0禁用" validate:"omitempty"`
 	LoginedAt  *time.Time `json:"loginedAt,omitempty" gorm:"column:logined_at;comment:最后登录时间"`
 }
 
-func (u *User) TableName() string {
-	return "user"
+func (u *SysUser) TableName() string {
+	return "sys_user"
 }
 
-type UserList struct {
+type SysUserList struct {
 	ListMeta `json:",inline"`
 
-	Items []*User `json:"items"`
+	Items []*SysUser `json:"items"`
 }
 
-func (u *User) Compare(password string) error {
+func (u *SysUser) Compare(password string) error {
 	if err := auth.ComparePassword(u.Password, password); err != nil {
 		return fmt.Errorf("failed to compile password: %w", err)
 	}
 	return nil
 }
 
-func (u *User) ToProto() *userv1.User {
+func (u *SysUser) ToProto() *userv1.User {
 	return &userv1.User{
 		InstanceId: u.InstanceID,
 		Name:       u.Name,

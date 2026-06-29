@@ -78,7 +78,7 @@ func runInitAdmin(opts *initAdminOptions) error {
 
 	ctx := context.Background()
 
-	existing := &usermodel.User{}
+	existing := &usermodel.SysUser{}
 	err = db.WithContext(ctx).Where("username = ?", opts.Username).First(existing).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("query user: %w", err)
@@ -93,7 +93,7 @@ func runInitAdmin(opts *initAdminOptions) error {
 		return fmt.Errorf("hash password: %w", err)
 	}
 
-	user := &usermodel.User{
+	user := &usermodel.SysUser{
 		ObjectMeta: usermodel.ObjectMeta{
 			InstanceID: uuid.New().String(),
 			Name:       opts.Username,

@@ -49,7 +49,7 @@ func (s *userSrv) Create(ctx context.Context, req *userv1.CreateUserRequest) (*u
 	if err != nil {
 		return nil, err
 	}
-	user := &model.User{
+	user := &model.SysUser{
 		ObjectMeta: model.ObjectMeta{
 			InstanceID: uuid.New().String(),
 			Name:       req.Name,
@@ -136,7 +136,7 @@ func (s *userSrv) List(ctx context.Context, req *userv1.ListUsersRequest) (*user
 }
 
 func (s *userSrv) AuthenticateUser(ctx context.Context, req *userv1.AuthenticateUserRequest) (*userv1.AuthenticateUserResponse, error) {
-	var user *model.User
+	var user *model.SysUser
 	var err error
 	switch DetectIdentifierType(req.Identifier) {
 	case IdentifierEmail:
