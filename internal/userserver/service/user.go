@@ -88,7 +88,7 @@ func (s *userSrv) Update(ctx context.Context, req *userv1.UpdateUserRequest) (*u
 		user.Password = hashed
 	}
 	if req.Status != 0 {
-		user.Status = int(req.Status)
+		user.UserStatus = int(req.Status)
 	}
 	if err := s.store.Users().Update(ctx, user, model.UpdateOptions{}); err != nil {
 		return nil, err
@@ -121,9 +121,9 @@ func (s *userSrv) List(ctx context.Context, req *userv1.ListUsersRequest) (*user
 		page = 1
 	}
 	offset := (page - 1) * pageSize
-	userList, err := s.store.Users().List(ctx, model.ListOptions{
-		Offset: &offset,
-		Limit:  &pageSize,
+	userList, err := s.store.Users().List(ctx, model.ListUserOptions{
+		ListOptions: model.ListOptions{Offset: &offset, Limit: &pageSize},
+		Keyword:     req.Keyword,
 	})
 	if err != nil {
 		return nil, err

@@ -15,5 +15,5 @@ type UserStore interface {
 	Update(ctx context.Context, user *model.SysUser, opts model.UpdateOptions) error
 	Delete(ctx context.Context, instanceID string, opts model.DeleteOptions) error
 	DeleteCollection(ctx context.Context, instanceIDs []string, opts model.DeleteOptions) error
-	List(ctx context.Context, opts model.ListOptions) (*model.SysUserList, error)
+	List(ctx context.Context, opts model.ListUserOptions) (*model.SysUserList, error)
 }

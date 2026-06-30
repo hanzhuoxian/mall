@@ -15,3 +15,9 @@ type SysRoleList struct {
 	ListMeta `json:",inline"`
 	Items    []*SysRole `json:"items"`
 }
+
+type ListRoleOptions struct {
+	ListOptions
+	Keyword    string `json:"keyword" form:"keyword"`
+	RoleStatus *int   `json:"roleStatus" form:"roleStatus"`
+}

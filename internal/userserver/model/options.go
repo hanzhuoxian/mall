@@ -22,10 +22,6 @@ type DeleteOptions struct {
 }
 
 type ListOptions struct {
-	LabelSelector  string `json:"labelSelector,omitempty" form:"labelSelector"`
-	FieldSelector  string `json:"fieldSelector,omitempty" form:"fieldSelector"`
-	TimeoutSeconds *int64 `json:"timeoutSeconds,omitempty"`
-	Offset         *int64 `json:"offset,omitempty" form:"offset"`
-	Limit          *int64 `json:"limit,omitempty" form:"limit"`
-	Export         bool   `json:"export" form:"export"`
+	Offset *int64 `json:"offset,omitempty"`
+	Limit  *int64 `json:"limit,omitempty"`
 }

@@ -79,8 +79,10 @@ message GetUserResponse {
 }
 
 message ListUsersRequest {
-  int32 page      = 1;
-  int32 page_size = 2;
+  int32  page      = 1;
+  int32  page_size = 2;
+  string keyword   = 3;
+  optional int32 status = 4;
 }
 
 message ListUsersResponse {

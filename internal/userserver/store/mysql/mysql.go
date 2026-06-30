@@ -23,6 +23,10 @@ func (ds *datastore) Users() store.UserStore {
 	return newUsers(ds)
 }
 
+func (ds *datastore) Roles() store.RoleStore {
+	return newRoles(ds)
+}
+
 func (ds *datastore) Close() error {
 	if ds.db == nil {
 		return nil

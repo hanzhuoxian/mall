@@ -62,7 +62,22 @@ func (user *users) DeleteCollection(ctx context.Context, instanceIDs []string, o
 	return user.db.Where("instance_id IN ?", instanceIDs).Delete(&model.SysUser{}).Error
 }
 
-func (user *users) List(ctx context.Context, opts model.ListOptions) (*model.SysUserList, error) {
+func (user *users) List(ctx context.Context, opts model.ListUserOptions) (*model.SysUserList, error) {
 	userList := &model.SysUserList{}
+	tx := user.db.Model(&model.SysUser{})
+	if opts.Keyword != "" {
+		like := "%" + opts.Keyword + "%"
+		tx = tx.Where("username LIKE ? OR nickname LIKE ? OR email LIKE ?", like, like, like)
+	}
+	if opts.Status != nil {
+		tx = tx.Where("user_status = ?", *opts.Status)
+	}
+	if err := tx.Count(&userList.TotalCount).Error; err != nil {
+		return nil, err
+	}
+	tx = tx.Offset(int(*opts.Offset)).Limit(int(*opts.Limit))
+	if err := tx.Find(&userList.Items).Error; err != nil {
+		return nil, err
+	}
 	return userList, nil
 }
