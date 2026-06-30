@@ -5,6 +5,7 @@ package userserver
 import (
 	"fmt"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
@@ -47,6 +48,7 @@ func provideAPIServer(cfg *config.Config) (*server.APIServer, error) {
 func provideGRPCServer(cfg *config.Config) *server.GRPCServer {
 	addr := fmt.Sprintf("%s:%d", cfg.GRPCOptions.BindAddress, cfg.GRPCOptions.BindPort)
 	opts := []grpc.ServerOption{
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
 			middleware.ValidationUnaryInterceptor,
 		),

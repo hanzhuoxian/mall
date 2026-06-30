@@ -11,6 +11,7 @@ import (
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
@@ -25,11 +26,12 @@ type APIServer struct {
 	InsecureServingInfo *InsecureServingInfo
 	ShutdownTimeout     *time.Duration
 	*gin.Engine
-	insecureServer, secureServer *http.Server // 分别对应 HTTP 和 HTTPS 的底层 http.Server 实例
-	middlewares                  []string
-	healthz                      bool
-	enableMetrics                bool
-	enableProfiling              bool
+	insecureServer  *http.Server
+	secureServer    *http.Server
+	middlewares     []string
+	healthz         bool
+	enableMetrics   bool
+	enableProfiling bool
 }
 
 // initAPIServer 依次执行 Setup、InstallMiddlewares 和 InstallAPIs，完成服务器初始化。
@@ -43,8 +45,11 @@ func initAPIServer(s *APIServer) {
 func (s *APIServer) Setup() {
 }
 
-// InstallMiddlewares 注册默认中间件（recovery、requestid、context）及配置中指定的中间件。
+// InstallMiddlewares 注册默认中间件（otelgin 链路追踪、recovery、requestid、context）及配置中指定的中间件。
 func (s *APIServer) InstallMiddlewares() {
+	// 传空字符串：otelgin 会从请求 Host 推断 server.address；服务标识（service.name）
+	// 来自 OTel resource，与此参数无关。telemetry 未启用时全局 Tracer 为 no-op。
+	s.Use(otelgin.Middleware(""))
 	s.Use(gin.Recovery())
 	s.Use(requestid.New())
 	s.Use(middleware.Context())

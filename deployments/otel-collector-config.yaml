@@ -1,0 +1,41 @@
+# OpenTelemetry Collector 配置（开发环境）。
+# 接收来自各服务的 OTLP 数据，分别将 traces 转发到 Jaeger、metrics 暴露给 Prometheus 抓取、
+# logs 打印到 collector 标准输出（便于本地调试）。
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+exporters:
+  # traces -> Jaeger（通过 OTLP/gRPC）
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  # metrics -> Prometheus 抓取端点（collector 暴露 :8889/metrics）
+  prometheus:
+    endpoint: 0.0.0.0:8889
+  # logs -> 标准输出
+  debug:
+    verbosity: detailed
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/jaeger]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]

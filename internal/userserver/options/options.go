@@ -17,6 +17,7 @@ type Options struct {
 	InsecureServingOptions *pkgoptions.InsecureServingOptions `json:"insecure" mapstructure:"insecure"`
 	LogOptions             *logger.Options                    `json:"log"      mapstructure:"log"`
 	RedisOptions           *pkgoptions.RedisOptions           `json:"redis"    mapstructure:"redis"`
+	TelemetryOptions       *pkgoptions.TelemetryOptions       `json:"otel"     mapstructure:"otel"`
 }
 
 // NewOptions 返回带有各子系统默认值的 Options 实例。
@@ -29,6 +30,7 @@ func NewOptions() *Options {
 		GRPCOptions:            pkgoptions.NewGRPCOptions(),
 		InsecureServingOptions: pkgoptions.NewInsecureServingOptions(),
 		RedisOptions:           pkgoptions.NewRedisOptions(),
+		TelemetryOptions:       pkgoptions.NewTelemetryOptions(),
 	}
 }
 
@@ -44,6 +46,7 @@ func (o *Options) Flags() (nfs nflag.NamedFlagSets) {
 	o.MySQLOptions.AddFlags(nfs.FlagSet("mysql"))
 	o.InsecureServingOptions.AddFlags(nfs.FlagSet("insecure serving"))
 	o.RedisOptions.AddFlags(nfs.FlagSet("redis"))
+	o.TelemetryOptions.AddFlags(nfs.FlagSet("otel"))
 	return nfs
 }
 
@@ -55,5 +58,6 @@ func (o *Options) Validate() []error {
 	errs = append(errs, o.MySQLOptions.Validate()...)
 	errs = append(errs, o.InsecureServingOptions.Validate()...)
 	errs = append(errs, o.RedisOptions.Validate()...)
+	errs = append(errs, o.TelemetryOptions.Validate()...)
 	return errs
 }

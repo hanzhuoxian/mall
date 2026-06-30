@@ -4,8 +4,10 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -39,6 +41,13 @@ func NewRedis(opts *RedisOptions) (redis.UniversalClient, error) {
 		MinIdleConns: opts.MinIdleConns,
 		MasterName:   opts.MasterName,
 	})
+
+	if err := redisotel.InstrumentTracing(rdb); err != nil {
+		return nil, fmt.Errorf("instrument redis tracing: %w", err)
+	}
+	if err := redisotel.InstrumentMetrics(rdb); err != nil {
+		return nil, fmt.Errorf("instrument redis metrics: %w", err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

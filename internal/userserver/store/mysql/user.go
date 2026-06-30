@@ -18,53 +18,55 @@ func newUsers(ds *datastore) *users {
 
 func (user *users) Get(ctx context.Context, username string, opts model.GetOptions) (*model.SysUser, error) {
 	u := &model.SysUser{}
-	err := user.db.Where("username = ?", username).First(u).Error
+	err := user.db.WithContext(ctx).Where("username = ?", username).First(u).Error
 	return u, err
 }
 
 func (user *users) GetByEmail(ctx context.Context, email string, opts model.GetOptions) (*model.SysUser, error) {
 	u := &model.SysUser{}
-	err := user.db.Where("email = ?", email).First(u).Error
+	err := user.db.WithContext(ctx).Where("email = ?", email).First(u).Error
 	return u, err
 }
 
 func (user *users) GetByPhone(ctx context.Context, phone string, opts model.GetOptions) (*model.SysUser, error) {
 	u := &model.SysUser{}
-	err := user.db.Where("phone = ?", phone).First(u).Error
+	err := user.db.WithContext(ctx).Where("phone = ?", phone).First(u).Error
 	return u, err
 }
 
 func (user *users) GetByInstanceID(ctx context.Context, instanceID string, opts model.GetOptions) (*model.SysUser, error) {
 	u := &model.SysUser{}
-	err := user.db.Where("instance_id = ?", instanceID).First(u).Error
+	err := user.db.WithContext(ctx).Where("instance_id = ?", instanceID).First(u).Error
 	return u, err
 }
 
 func (user *users) Create(ctx context.Context, u *model.SysUser, opts model.CreateOptions) error {
-	return user.db.Create(u).Error
+	return user.db.WithContext(ctx).Create(u).Error
 }
 
 func (user *users) Update(ctx context.Context, u *model.SysUser, opts model.UpdateOptions) error {
-	return user.db.Save(u).Error
+	return user.db.WithContext(ctx).Save(u).Error
 }
 
 func (user *users) Delete(ctx context.Context, instanceID string, opts model.DeleteOptions) error {
+	db := user.db.WithContext(ctx)
 	if opts.Unscoped {
-		user.db = user.db.Unscoped()
+		db = db.Unscoped()
 	}
-	return user.db.Where("instance_id = ?", instanceID).Delete(&model.SysUser{}).Error
+	return db.Where("instance_id = ?", instanceID).Delete(&model.SysUser{}).Error
 }
 
 func (user *users) DeleteCollection(ctx context.Context, instanceIDs []string, opts model.DeleteOptions) error {
+	db := user.db.WithContext(ctx)
 	if opts.Unscoped {
-		user.db = user.db.Unscoped()
+		db = db.Unscoped()
 	}
-	return user.db.Where("instance_id IN ?", instanceIDs).Delete(&model.SysUser{}).Error
+	return db.Where("instance_id IN ?", instanceIDs).Delete(&model.SysUser{}).Error
 }
 
 func (user *users) List(ctx context.Context, opts model.ListUserOptions) (*model.SysUserList, error) {
 	userList := &model.SysUserList{}
-	tx := user.db.Model(&model.SysUser{})
+	tx := user.db.WithContext(ctx).Model(&model.SysUser{})
 	if opts.Keyword != "" {
 		like := "%" + opts.Keyword + "%"
 		tx = tx.Where("username LIKE ? OR nickname LIKE ? OR email LIKE ?", like, like, like)

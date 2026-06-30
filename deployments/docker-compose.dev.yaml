@@ -58,6 +58,32 @@ services:
     volumes:
       - es_data:/usr/share/elasticsearch/data
 
+  # Jaeger all-in-one：分布式链路追踪后端与 UI（http://localhost:16686）。
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: dev-jaeger
+    restart: always
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686" # Jaeger UI
+
+  # OpenTelemetry Collector：统一接收各服务的 OTLP 数据（gRPC :4317 / HTTP :4318）。
+  # 服务侧将 otel.endpoint 指向 localhost:4317 即可上报 traces/metrics/logs。
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.103.0
+    container_name: dev-otel-collector
+    restart: always
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+      - "8889:8889" # Prometheus 抓取端点（metrics）
+    depends_on:
+      - jaeger
+
 volumes:
   redis_data:
   mysql_data:

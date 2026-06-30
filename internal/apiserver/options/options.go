@@ -14,6 +14,7 @@ type Options struct {
 	UserServiceOptions     *pkgoptions.GRPCOptions            `json:"user-service" mapstructure:"user-service"`
 	RedisOptions           *pkgoptions.RedisOptions           `json:"redis" mapstructure:"redis"`
 	LogOptions             *logger.Options                    `json:"log"      mapstructure:"log"`
+	TelemetryOptions       *pkgoptions.TelemetryOptions       `json:"otel" mapstructure:"otel"`
 }
 
 // NewOptions 返回带有各子系统默认值的 Options 实例。
@@ -26,6 +27,7 @@ func NewOptions() *Options {
 		UserServiceOptions:     pkgoptions.NewGRPCOptions(),
 		RedisOptions:           pkgoptions.NewRedisOptions(),
 		LogOptions:             logger.NewOptions(),
+		TelemetryOptions:       pkgoptions.NewTelemetryOptions(),
 	}
 }
 
@@ -35,6 +37,7 @@ func (o *Options) Flags() (nfs nflag.NamedFlagSets) {
 	o.UserServiceOptions.AddFlags(nfs.FlagSet("user-service"))
 	o.RedisOptions.AddFlags(nfs.FlagSet("redis"))
 	o.LogOptions.AddFlags(nfs.FlagSet("log"))
+	o.TelemetryOptions.AddFlags(nfs.FlagSet("otel"))
 	return nfs
 }
 
@@ -45,5 +48,6 @@ func (o *Options) Validate() []error {
 	errs = append(errs, o.UserServiceOptions.Validate()...)
 	errs = append(errs, o.RedisOptions.Validate()...)
 	errs = append(errs, o.LogOptions.Validate()...)
+	errs = append(errs, o.TelemetryOptions.Validate()...)
 	return errs
 }

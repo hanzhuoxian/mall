@@ -3,6 +3,9 @@ package logger
 import (
 	"context"
 
+	"go.opentelemetry.io/contrib/bridges/otelzap"
+	otellog "go.opentelemetry.io/otel/log/global"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -157,8 +160,13 @@ func New(opts *Options) *zapLogger {
 		ErrorOutputPaths: opts.ErrorOutputPaths,
 	}
 
+	otelOption := zap.WrapCore(func(c zapcore.Core) zapcore.Core {
+		otelCore := otelzap.NewCore(opts.Name, otelzap.WithLoggerProvider(otellog.GetLoggerProvider()))
+		return zapcore.NewTee(c, otelCore)
+	})
+
 	var err error
-	l, err := loggerConfig.Build(zap.AddStacktrace(zapcore.PanicLevel), zap.AddCallerSkip(1))
+	l, err := loggerConfig.Build(zap.AddStacktrace(zapcore.PanicLevel), zap.AddCallerSkip(1), otelOption)
 	if err != nil {
 		panic(err)
 	}
@@ -416,6 +424,10 @@ func (l *zapLogger) L(ctx context.Context) *zapLogger {
 	}
 	if watcherName := ctx.Value(KeyWatcherName); watcherName != nil {
 		fields = append(fields, zap.Any(KeyWatcherName, watcherName))
+	}
+	if sc := trace.SpanContextFromContext(ctx); sc.IsValid() {
+		fields = append(fields, zap.String(KeyTraceID, sc.TraceID().String()))
+		fields = append(fields, zap.String(KeySpanID, sc.SpanID().String()))
 	}
 
 	lg.zapLogger = lg.zapLogger.With(fields...)

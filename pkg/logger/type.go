@@ -10,6 +10,8 @@ const (
 	KeyRequestID   string = "requestID"
 	KeyUsername    string = "username"
 	KeyWatcherName string = "watcher"
+	KeyTraceID     string = "trace_id"
+	KeySpanID      string = "span_id"
 )
 
 // Field is an alias for the field structure in the underlying log frame.

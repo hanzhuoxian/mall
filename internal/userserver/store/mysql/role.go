@@ -17,35 +17,37 @@ func newRoles(ds *datastore) *roles {
 
 func (role *roles) GetByInstanceID(ctx context.Context, instanceID string, opts model.GetOptions) (*model.SysRole, error) {
 	r := &model.SysRole{}
-	err := role.db.Where("instance_id = ?", instanceID).First(role).Error
+	err := role.db.WithContext(ctx).Where("instance_id = ?", instanceID).First(r).Error
 	return r, err
 }
 
 func (role *roles) Create(ctx context.Context, u *model.SysRole, opts model.CreateOptions) error {
-	return role.db.Create(u).Error
+	return role.db.WithContext(ctx).Create(u).Error
 }
 
 func (role *roles) Update(ctx context.Context, u *model.SysRole, opts model.UpdateOptions) error {
-	return role.db.Save(u).Error
+	return role.db.WithContext(ctx).Save(u).Error
 }
 
 func (role *roles) Delete(ctx context.Context, instanceID string, opts model.DeleteOptions) error {
+	db := role.db.WithContext(ctx)
 	if opts.Unscoped {
-		role.db = role.db.Unscoped()
+		db = db.Unscoped()
 	}
-	return role.db.Where("instance_id = ?", instanceID).Delete(&model.SysRole{}).Error
+	return db.Where("instance_id = ?", instanceID).Delete(&model.SysRole{}).Error
 }
 
 func (role *roles) DeleteCollection(ctx context.Context, instanceIDs []string, opts model.DeleteOptions) error {
+	db := role.db.WithContext(ctx)
 	if opts.Unscoped {
-		role.db = role.db.Unscoped()
+		db = db.Unscoped()
 	}
-	return role.db.Where("instance_id IN ?", instanceIDs).Delete(&model.SysRole{}).Error
+	return db.Where("instance_id IN ?", instanceIDs).Delete(&model.SysRole{}).Error
 }
 
 func (role *roles) List(ctx context.Context, opts model.ListRoleOptions) (*model.SysRoleList, error) {
 	roleList := &model.SysRoleList{}
-	tx := role.db.Model(&model.SysRole{})
+	tx := role.db.WithContext(ctx).Model(&model.SysRole{})
 	if opts.Keyword != "" {
 		like := "%" + opts.Keyword + "%"
 		tx = tx.Where("role_code LIKE ? OR name LIKE ?", like, like)

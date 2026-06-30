@@ -1,9 +1,13 @@
 package apiserver
 
 import (
+	"context"
+	"time"
+
 	"github.com/hanzhuoxian/mall/internal/apiserver/options"
 	"github.com/hanzhuoxian/mall/pkg/app"
 	"github.com/hanzhuoxian/mall/pkg/logger"
+	"github.com/hanzhuoxian/mall/pkg/telemetry"
 )
 
 // commandDesc 是用户服务命令行的长描述，展示在 --help 输出中。
@@ -15,8 +19,9 @@ for the api objects The Server services REST operations to do the api objects ma
 func NewApp(basename string) *app.App {
 	options := options.NewOptions()
 	return app.NewApp(
-		basename,
 		"Mall Api Server",
+		basename,
+		app.WithOptions(options),
 		app.WithDescription(commandDesc),
 		app.WithRunFunc(run(options)),
 		app.WithNoConfig(),
@@ -25,6 +30,18 @@ func NewApp(basename string) *app.App {
 
 func run(opts *options.Options) app.RunFunc {
 	return func(basename string) error {
+		// 先初始化遥测，使全局 LoggerProvider 就绪，logger 才能桥接日志至 OTLP。
+		// 服务名以 basename 兜底，可由 OTEL_SERVICE_NAME 环境变量覆盖。
+		tp, err := telemetry.Init(context.Background(), opts.TelemetryOptions.Config(basename))
+		if err != nil {
+			return err
+		}
+		defer func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			_ = tp.Shutdown(ctx)
+		}()
+
 		logger.Init(opts.LogOptions)
 		defer logger.Flush()
 

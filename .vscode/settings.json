@@ -13,5 +13,6 @@
         "dialector",
         "mallctl",
         "varchar",
-    ]
+    ],
+    "protobuf.protoc.path": "/opt/homebrew/bin/protoc"
 }
