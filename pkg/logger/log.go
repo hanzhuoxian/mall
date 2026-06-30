@@ -435,6 +435,17 @@ func (l *zapLogger) L(ctx context.Context) *zapLogger {
 	return lg
 }
 
+// ContextField 返回一个承载 ctx 的 zap field，专供 otelzap 桥接器使用：otelzap 会从中
+// 提取活动 span，将 OTLP 日志记录与 trace 关联（填充 LogRecord 的 TraceID/SpanID），
+// 从而在后端实现日志-链路互跳。
+//
+// 该 field 的类型为 zapcore.SkipType，对 console/file 编码器是无操作，因此不会污染
+// 人类可读的日志输出；otelzap 通过字段值的类型（context.Context）识别它，与 Type 无关。
+// 适用于持有 ctx 但走原始 *zap.Logger 的场景（如 GORM 日志回调）。
+func ContextField(ctx context.Context) Field {
+	return Field{Type: zapcore.SkipType, Interface: ctx}
+}
+
 // clone 浅拷贝当前 logger，用于派生带额外字段的子 logger，避免修改原实例。
 //
 //nolint:predeclared

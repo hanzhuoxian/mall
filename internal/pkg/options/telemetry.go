@@ -28,7 +28,7 @@ type TelemetryOptions struct {
 // 默认关闭，开发环境下连接本地 collector（localhost:4317，明文，全采样）。
 func NewTelemetryOptions() *TelemetryOptions {
 	return &TelemetryOptions{
-		Enabled:      false,
+		Enabled:      true,
 		Endpoint:     "localhost:4317",
 		Environment:  "dev",
 		SamplerRatio: 1.0,

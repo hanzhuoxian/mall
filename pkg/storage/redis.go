@@ -9,6 +9,7 @@ import (
 
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
+	"github.com/redis/go-redis/v9/maintnotifications"
 )
 
 // RedisOptions 包含 Redis 连接所需的配置项。
@@ -30,16 +31,17 @@ type RedisOptions struct {
 // 5 秒内无法连通则返回错误。
 func NewRedis(opts *RedisOptions) (redis.UniversalClient, error) {
 	rdb := redis.NewUniversalClient(&redis.UniversalOptions{
-		Addrs:        opts.Addrs,
-		Username:     opts.Username,
-		Password:     opts.Password,
-		DB:           opts.DB,
-		DialTimeout:  opts.DialTimeout,
-		ReadTimeout:  opts.ReadTimeout,
-		WriteTimeout: opts.WriteTimeout,
-		PoolSize:     opts.PoolSize,
-		MinIdleConns: opts.MinIdleConns,
-		MasterName:   opts.MasterName,
+		Addrs:                    opts.Addrs,
+		Username:                 opts.Username,
+		Password:                 opts.Password,
+		DB:                       opts.DB,
+		DialTimeout:              opts.DialTimeout,
+		ReadTimeout:              opts.ReadTimeout,
+		WriteTimeout:             opts.WriteTimeout,
+		PoolSize:                 opts.PoolSize,
+		MinIdleConns:             opts.MinIdleConns,
+		MasterName:               opts.MasterName,
+		MaintNotificationsConfig: &maintnotifications.Config{Mode: maintnotifications.ModeDisabled},
 	})
 
 	if err := redisotel.InstrumentTracing(rdb); err != nil {

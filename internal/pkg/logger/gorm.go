@@ -78,6 +78,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 		(!errors.Is(err, gormlogger.ErrRecordNotFound) || !l.ignoreRecordNotFoundError):
 		sql, rows := fc()
 		l.logger.Error("[gorm] trace",
+			logger.ContextField(ctx),
 			zap.String("caller", caller),
 			zap.Error(err),
 			zap.String("elapsed", fmt.Sprintf("%.3fms", float64(elapsed.Nanoseconds())/1e6)),
@@ -87,6 +88,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 	case elapsed > l.slowThreshold && l.slowThreshold > 0 && l.logLevel >= gormlogger.Warn:
 		sql, rows := fc()
 		l.logger.Warn("[gorm] slow sql",
+			logger.ContextField(ctx),
 			zap.String("caller", caller),
 			zap.String("threshold", l.slowThreshold.String()),
 			zap.String("elapsed", fmt.Sprintf("%.3fms", float64(elapsed.Nanoseconds())/1e6)),
@@ -96,6 +98,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 	case l.logLevel >= gormlogger.Info:
 		sql, rows := fc()
 		l.logger.Info("[gorm] trace",
+			logger.ContextField(ctx),
 			zap.String("caller", caller),
 			zap.String("elapsed", fmt.Sprintf("%.3fms", float64(elapsed.Nanoseconds())/1e6)),
 			zap.Int64("rows", rows),
