@@ -16,7 +16,7 @@ service UserService {
   rpc AuthenticateUser(AuthenticateUserRequest) returns (AuthenticateUserResponse);
 }
 
-// User 是用户资源的完整表示，密码不对外暴露。
+// User 是用户资源的完整表示
 message User {
   string instance_id = 1;
   string name        = 2;
@@ -25,7 +25,7 @@ message User {
   string username    = 5;
   string nickname    = 6;
   int32  status      = 7;
-  google.protobuf.Timestamp logined_at = 8;
+  google.protobuf.Timestamp last_login_at = 8;
   google.protobuf.Timestamp created_at = 9;
   google.protobuf.Timestamp updated_at = 10;
 }

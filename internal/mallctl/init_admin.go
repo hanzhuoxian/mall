@@ -98,11 +98,11 @@ func runInitAdmin(opts *initAdminOptions) error {
 			InstanceID: uuid.New().String(),
 			Name:       opts.Username,
 		},
-		Username: opts.Username,
-		Nickname: opts.Nickname,
-		Email:    opts.Email,
-		Password: hashed,
-		Status:   1,
+		Username:   opts.Username,
+		Nickname:   opts.Nickname,
+		Email:      opts.Email,
+		Password:   hashed,
+		UserStatus: 1,
 	}
 
 	if err := db.WithContext(ctx).Create(user).Error; err != nil {
