@@ -13,6 +13,8 @@ export default {
   'menu.product.category': '商品分类',
   'menu.order': '订单管理',
   'menu.customer': '客户管理',
+  'menu.system': '系统管理',
+  'menu.system.user': '用户管理',
   'menu.dashboard.analysis': '分析页',
   'menu.dashboard.monitor': '监控页',
   'menu.dashboard.workplace': '工作台',
