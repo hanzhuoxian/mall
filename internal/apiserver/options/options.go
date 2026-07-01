@@ -20,7 +20,7 @@ type Options struct {
 // NewOptions 返回带有各子系统默认值的 Options 实例。
 func NewOptions() *Options {
 	insecureServing := pkgoptions.NewInsecureServingOptions()
-	insecureServing.BindPort = 9090
+	insecureServing.BindPort = 9091
 	return &Options{
 		InsecureServingOptions: insecureServing,
 		ServerRunOptions:       pkgoptions.NewServerOptions(),

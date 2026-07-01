@@ -46,8 +46,8 @@ func NewAutoAuth(cfg *config.Config, userClient *grpcclient.UserClient, captcha 
 }
 
 func NewBasicAuth(userClient *grpcclient.UserClient) auth.BasicStrategy {
-	return auth.NewBasicStrategy(func(identifier, password string) (string, bool) {
-		resp, err := userClient.AuthenticateUser(context.Background(), &userv1.AuthenticateUserRequest{
+	return auth.NewBasicStrategy(func(ctx context.Context, identifier, password string) (string, bool) {
+		resp, err := userClient.AuthenticateUser(ctx, &userv1.AuthenticateUserRequest{
 			Identifier: identifier,
 			Password:   password,
 		})
@@ -102,8 +102,8 @@ func authenticator(userClient *grpcclient.UserClient, captcha *base64Captcha.Cap
 			return "", jwt.ErrFailedAuthentication
 		}
 
+		ctx := c.Request.Context()
 		if !isBasic {
-			ctx := context.Background()
 			failKey := loginFailKeyPrefix + login.Identifier
 			failCount, _ := rdb.Get(ctx, failKey).Int()
 			if failCount >= loginFailThreshold {
@@ -130,7 +130,7 @@ func authenticator(userClient *grpcclient.UserClient, captcha *base64Captcha.Cap
 			return resp.InstanceId, nil
 		}
 
-		resp, err := userClient.AuthenticateUser(context.Background(), &userv1.AuthenticateUserRequest{
+		resp, err := userClient.AuthenticateUser(ctx, &userv1.AuthenticateUserRequest{
 			Identifier: login.Identifier,
 			Password:   login.Password,
 		})

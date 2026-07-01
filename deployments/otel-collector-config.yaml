@@ -1,6 +1,10 @@
 # OpenTelemetry Collector 配置（开发环境）。
-# 接收来自各服务的 OTLP 数据，分别将 traces 转发到 Jaeger、metrics 暴露给 Prometheus 抓取、
+# 接收来自各服务的 OTLP 数据：traces 转发到 Jaeger、metrics 暴露给 Prometheus 抓取、
 # logs 打印到 collector 标准输出（便于本地调试）。
+#
+# 此外通过 spanmetrics connector 将 traces 聚合为 RED 指标（calls_total 计数器 +
+# duration 直方图），交由 Prometheus 存储，供 Jaeger 的 Service Performance Monitoring
+# （Monitor 面板）查询——这是 Jaeger SPM 能展示服务/操作级 RED 仪表盘的前提。
 receivers:
   otlp:
     protocols:
@@ -12,6 +16,21 @@ receivers:
 processors:
   batch: {}
 
+# connector 既是某条 pipeline 的 exporter，又是另一条 pipeline 的 receiver。
+# spanmetrics 消费 traces pipeline 的 span，产出 metrics 供 Jaeger SPM 使用。
+connectors:
+  spanmetrics:
+    # histogram 桶用于计算 Duration 分位数（P50/P95…）。
+    histogram:
+      explicit:
+        buckets: [2ms, 8ms, 20ms, 50ms, 100ms, 200ms, 500ms, 1s, 2s, 5s]
+    # 额外维度：让 RED 指标可按操作/类型/状态码下钻。
+    dimensions:
+      - name: http.method
+      - name: http.status_code
+    exemplars:
+      enabled: true
+
 exporters:
   # traces -> Jaeger（通过 OTLP/gRPC）
   otlp/jaeger:
@@ -19,20 +38,32 @@ exporters:
     tls:
       insecure: true
   # metrics -> Prometheus 抓取端点（collector 暴露 :8889/metrics）
+  # resource_to_telemetry_conversion 将 resource 属性（如 service.name）转成指标标签
+  # （service_name），Jaeger SPM 的 PromQL 依赖该标签。
   prometheus:
     endpoint: 0.0.0.0:8889
+    enable_open_metrics: true
+    resource_to_telemetry_conversion:
+      enabled: true
   # logs -> 标准输出
   debug:
     verbosity: detailed
 
 service:
   pipelines:
+    # traces 既转发到 Jaeger 存储，又送入 spanmetrics 生成 RED 指标。
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp/jaeger]
+      exporters: [otlp/jaeger, spanmetrics]
+    # 应用自身上报的 OTLP metrics。
     metrics:
       receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+    # spanmetrics 产出的 RED 指标（calls_total / duration）。
+    metrics/spanmetrics:
+      receivers: [spanmetrics]
       processors: [batch]
       exporters: [prometheus]
     logs:

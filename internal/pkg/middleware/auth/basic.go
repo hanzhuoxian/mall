@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/base64"
 	"strings"
 
@@ -15,13 +16,13 @@ const AuthBasicName = "Basic"
 // BasicStrategy 实现了一个基于 HTTP Basic 的简单认证策略。
 // compare 函数用于校验给定的 identifier 与 password 是否匹配。
 type BasicStrategy struct {
-	authenticate func(identifier, password string) (instanceID string, ok bool)
+	authenticate func(ctx context.Context, identifier, password string) (instanceID string, ok bool)
 }
 
 var _ middleware.AuthStrategy = &BasicStrategy{}
 
 // NewBasicStrategy 使用给定的比较函数构造并返回一个 BasicStrategy。
-func NewBasicStrategy(authenticate func(identifier, password string) (instanceID string, ok bool)) BasicStrategy {
+func NewBasicStrategy(authenticate func(ctx context.Context, identifier, password string) (instanceID string, ok bool)) BasicStrategy {
 	return BasicStrategy{authenticate: authenticate}
 }
 
@@ -42,7 +43,7 @@ func (b BasicStrategy) AuthFunc() gin.HandlerFunc {
 		if len(pair) != 2 {
 			c.Abort()
 		}
-		if instanceID, ok := b.authenticate(pair[0], pair[1]); ok {
+		if instanceID, ok := b.authenticate(c.Request.Context(), pair[0], pair[1]); ok {
 			c.Set(middleware.UserIdentifier, instanceID)
 		}
 		c.Next()

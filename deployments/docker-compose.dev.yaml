@@ -65,6 +65,12 @@ services:
     restart: always
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
+      # SPM（Monitor 面板）：让 Jaeger query 从 Prometheus 读取 spanmetrics 产出的 RED 指标。
+      METRICS_STORAGE_TYPE: "prometheus"
+      PROMETHEUS_SERVER_URL: "http://prometheus:9090"
+      # spanmetrics 产出的指标名为 calls_total / duration_*，开启归一化以匹配 Jaeger 的查询。
+      PROMETHEUS_QUERY_NORMALIZE_CALLS: "true"
+      PROMETHEUS_QUERY_NORMALIZE_DURATION: "true"
     ports:
       - "16686:16686" # Jaeger UI
 
@@ -84,8 +90,26 @@ services:
     depends_on:
       - jaeger
 
+  # Prometheus：兼容 Prometheus 协议的时序数据库，抓取并存储 collector 暴露的服务指标，
+  # 提供查询与告警能力（UI/查询: http://localhost:9090）。
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: dev-prometheus
+    restart: always
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090" # Prometheus UI / 查询接口
+    depends_on:
+      - otel-collector
+
 volumes:
   redis_data:
   mysql_data:
   mongo_data:
   es_data:
+  prometheus_data:

@@ -10,7 +10,7 @@
  * @doc https://umijs.org/docs/guides/proxy
  */
 const backendProxy = {
-  target: 'http://localhost:9090',
+  target: 'http://localhost:9091',
   changeOrigin: true,
 };
 
