@@ -50,6 +50,22 @@ export default [
     component: './customer',
   },
   {
+    path: '/system',
+    name: 'system',
+    icon: 'setting',
+    routes: [
+      {
+        path: '/system',
+        redirect: '/system/user',
+      },
+      {
+        path: '/system/user',
+        name: 'user',
+        component: './system/user',
+      },
+    ],
+  },
+  {
     path: '/',
     redirect: '/dashboard',
   },

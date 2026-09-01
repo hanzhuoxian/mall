@@ -1,11 +1,14 @@
 package response
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hanzhuoxian/mall/pkg/errors"
 	"github.com/hanzhuoxian/mall/pkg/logger"
@@ -65,8 +68,22 @@ func Write(c *gin.Context, err error, data any) {
 	c.JSON(http.StatusOK, Response{
 		Code:    0,
 		Message: "success",
-		Data:    data,
+		Data:    marshalData(data),
 	})
+}
+
+// marshalData 将 proto 消息用 protojson 序列化为 camelCase 字段、
+// 时间戳为 RFC3339 字符串，供前端直接消费；非 proto 数据原样返回。
+func marshalData(data any) any {
+	msg, ok := data.(proto.Message)
+	if !ok {
+		return data
+	}
+	b, err := protojson.MarshalOptions{EmitUnpopulated: true}.Marshal(msg)
+	if err != nil {
+		return data
+	}
+	return json.RawMessage(b)
 }
 
 // Success writes a HTTP 200 response with data.

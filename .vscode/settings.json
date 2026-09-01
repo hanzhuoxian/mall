@@ -13,6 +13,10 @@
         "dialector",
         "mallctl",
         "varchar",
+        "userserver",
+        "apiserver",
+        "pkgdb",
+        "gormlogger",
     ],
     "protobuf.protoc.path": "/opt/homebrew/bin/protoc"
 }

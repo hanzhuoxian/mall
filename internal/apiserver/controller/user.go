@@ -102,7 +102,7 @@ func (h *UserController) DeleteUser(c *gin.Context) {
 }
 
 type deleteCollectionRequest struct {
-	InstanceIds []string `json:"instance_ids" binding:"required,min=1"`
+	InstanceIds []string `json:"instanceIds" binding:"required,min=1"`
 	Unscoped    bool     `json:"unscoped"`
 }
 
@@ -151,7 +151,7 @@ func (h *UserController) GetUser(c *gin.Context) {
 
 type listUsersQuery struct {
 	Page     int32 `form:"page"`
-	PageSize int32 `form:"page_size"`
+	PageSize int32 `form:"pageSize"`
 }
 
 // ListUsers 获取分页用户列表。

@@ -13,6 +13,8 @@ export default {
   'menu.product.category': 'Categories',
   'menu.order': 'Orders',
   'menu.customer': 'Customers',
+  'menu.system': 'System',
+  'menu.system.user': 'User Management',
   'menu.dashboard.analysis': 'Analysis',
   'menu.dashboard.monitor': 'Monitor',
   'menu.dashboard.workplace': 'Workplace',
