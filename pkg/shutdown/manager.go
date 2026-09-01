@@ -1,6 +1,7 @@
 package shutdown
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -32,10 +33,11 @@ func (p *PosixSignalManager) GetName() string {
 
 // Start 在独立 goroutine 中监听 OS 信号，收到信号后触发 GracefulShutter.StartShutdown。
 func (p *PosixSignalManager) Start(gs GracefulShutter) error {
+	ctx, stop := signal.NotifyContext(context.Background(), p.signals...)
+
 	go func() {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, p.signals...)
-		<-c
+		<-ctx.Done()
+		stop()
 
 		gs.StartShutdown(p)
 	}()

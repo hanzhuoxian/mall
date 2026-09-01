@@ -24,7 +24,8 @@ import (
 type APIServer struct {
 	SecureServingInfo   *SecureServingInfo
 	InsecureServingInfo *InsecureServingInfo
-	ShutdownTimeout     *time.Duration
+	// ShutdownTimeout 是 Close 等待在途请求处理完成的上限，为 0 时回落到 DefaultShutdownTimeout。
+	ShutdownTimeout time.Duration
 	*gin.Engine
 	insecureServer  *http.Server
 	secureServer    *http.Server
@@ -158,10 +159,17 @@ func (s *APIServer) ping(ctx context.Context) error {
 	}
 }
 
-// Close 优雅关闭 HTTP 和 HTTPS 服务器，最多等待 10 秒。
+// Close 优雅关闭 HTTP 和 HTTPS 服务器，等待在途请求处理完成，最多等待 ShutdownTimeout。
+//
+// 这里刻意使用 context.Background() 而非触发关闭的那个已取消的 ctx：
+// Shutdown 需要一个仍然有效的截止时间来排空在途请求，传入已取消的 ctx 会让它立即返回。
 func (s *APIServer) Close() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	timeout := s.ShutdownTimeout
+	if timeout <= 0 {
+		timeout = DefaultShutdownTimeout
+	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	if s.secureServer != nil {

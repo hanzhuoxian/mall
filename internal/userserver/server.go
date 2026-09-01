@@ -49,12 +49,19 @@ func newUserServer(
 func (u *userServer) PrepareRun() *preparedUserServer {
 	installRoutes(u.grpcServer, u.svc)
 
+	// 关闭顺序不可调整：必须先停止接收新请求并排空在途请求（HTTP、gRPC），
+	// 再关闭它们依赖的 MySQL / Redis。反过来会让在途请求拿到已关闭的连接池，
+	// 优雅关停就失去了意义。
+	//
+	// GracefulShutdown 并发执行各个 callback，因此有先后依赖的清理必须写在同一个 callback 内。
 	u.gs.AddShutdownCallback(shutdown.ShutdownFunc(func(s string) error {
-		storeErr := u.storeFactory.Close()
-		cacheErr := u.cacheFactory.Close()
 		u.apiServer.Close()
 		grpcErr := u.grpcServer.Close()
-		return errors.Join(storeErr, cacheErr, grpcErr)
+
+		storeErr := u.storeFactory.Close()
+		cacheErr := u.cacheFactory.Close()
+
+		return errors.Join(grpcErr, storeErr, cacheErr)
 	}))
 	return &preparedUserServer{u}
 }

@@ -18,6 +18,9 @@ const (
 	RecommendedEnvPrefix = "MALL"
 )
 
+// DefaultShutdownTimeout 是优雅关闭 HTTP 服务器时等待在途请求处理完成的默认上限。
+const DefaultShutdownTimeout = 60 * time.Second
+
 // Config 是 APIServer 的完整配置，包含运行模式、中间件列表、可选功能开关及 TLS/非 TLS 监听信息。
 type Config struct {
 	SecureServing   *SecureServingInfo
@@ -25,6 +28,7 @@ type Config struct {
 	Jwt             *JwtInfo
 	Mode            string
 	Middlewares     []string
+	ShutdownTimeout time.Duration
 	Healthz         bool
 	EnableProfiling bool
 	EnableMetrics   bool
@@ -67,6 +71,7 @@ func NewConfig() *Config {
 		Healthz:         true,
 		Mode:            gin.DebugMode,
 		Middlewares:     []string{},
+		ShutdownTimeout: DefaultShutdownTimeout,
 		EnableProfiling: true,
 		EnableMetrics:   true,
 		Jwt: &JwtInfo{
@@ -84,6 +89,9 @@ type CompletedConfig struct {
 
 // Complete 对配置进行完整性填充，返回可用于创建服务器的 CompletedConfig。
 func (cfg *Config) Complete() CompletedConfig {
+	if cfg.ShutdownTimeout <= 0 {
+		cfg.ShutdownTimeout = DefaultShutdownTimeout
+	}
 	return CompletedConfig{cfg}
 }
 
@@ -94,6 +102,7 @@ func (c CompletedConfig) New() (*APIServer, error) {
 	s := &APIServer{
 		SecureServingInfo:   c.SecureServing,
 		InsecureServingInfo: c.InsecureServing,
+		ShutdownTimeout:     c.ShutdownTimeout,
 		healthz:             c.Healthz,
 		enableMetrics:       c.EnableMetrics,
 		enableProfiling:     c.EnableProfiling,
