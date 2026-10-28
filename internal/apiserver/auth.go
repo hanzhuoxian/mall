@@ -41,10 +41,16 @@ type loginInfo struct {
 
 // NewAutoAuth 创建 Auto 认证策略，根据 Authorization 头自动选择 Basic 或 JWT。
 // cfg、userClient、captcha 和 rdb 均由 Wire 注入。
-func NewAutoAuth(cfg *config.Config, userClient *grpcclient.UserClient, captcha *base64Captcha.Captcha, rdb redis.UniversalClient) middleware.AuthStrategy {
+func NewAutoAuth(
+	cfg *config.Config,
+	userClient *grpcclient.UserClient,
+	captcha *base64Captcha.Captcha,
+	rdb redis.UniversalClient,
+) middleware.AuthStrategy {
 	return auth.NewAutoStrategy(NewBasicAuth(userClient), NewJWTAuth(cfg, userClient, captcha, rdb))
 }
 
+// NewBasicAuth creates an HTTP Basic authentication strategy.
 func NewBasicAuth(userClient *grpcclient.UserClient) auth.BasicStrategy {
 	return auth.NewBasicStrategy(func(ctx context.Context, identifier, password string) (string, bool) {
 		resp, err := userClient.AuthenticateUser(ctx, &userv1.AuthenticateUserRequest{
@@ -58,7 +64,13 @@ func NewBasicAuth(userClient *grpcclient.UserClient) auth.BasicStrategy {
 	})
 }
 
-func NewJWTAuth(cfg *config.Config, userClient *grpcclient.UserClient, captcha *base64Captcha.Captcha, rdb redis.UniversalClient) auth.JWTStrategy {
+// NewJWTAuth creates a JWT authentication strategy.
+func NewJWTAuth(
+	cfg *config.Config,
+	userClient *grpcclient.UserClient,
+	captcha *base64Captcha.Captcha,
+	rdb redis.UniversalClient,
+) auth.JWTStrategy {
 	ginjwt, _ := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:            "mall",
 		SigningAlgorithm: "HS256",
@@ -87,7 +99,11 @@ func NewJWTAuth(cfg *config.Config, userClient *grpcclient.UserClient, captcha *
 	return auth.NewJWTStrategy(*ginjwt)
 }
 
-func authenticator(userClient *grpcclient.UserClient, captcha *base64Captcha.Captcha, rdb redis.UniversalClient) func(c *gin.Context) (any, error) {
+func authenticator(
+	userClient *grpcclient.UserClient,
+	captcha *base64Captcha.Captcha,
+	rdb redis.UniversalClient,
+) func(c *gin.Context) (any, error) {
 	return func(c *gin.Context) (any, error) {
 		var login loginInfo
 		var err error
@@ -112,17 +128,17 @@ func authenticator(userClient *grpcclient.UserClient, captcha *base64Captcha.Cap
 				}
 			}
 
-			resp, err := userClient.AuthenticateUser(ctx, &userv1.AuthenticateUserRequest{
+			resp, authErr := userClient.AuthenticateUser(ctx, &userv1.AuthenticateUserRequest{
 				Identifier: login.Identifier,
 				Password:   login.Password,
 			})
-			if err != nil {
+			if authErr != nil {
 				// 失败计数：第一次失败时设置过期时间
 				count, _ := rdb.Incr(ctx, failKey).Result()
 				if count == 1 {
 					rdb.Expire(ctx, failKey, loginFailExpiry)
 				}
-				logAuthError(login.Identifier, err)
+				logAuthError(login.Identifier, authErr)
 				return "", errors.New(coder.ErrPasswordIncorrect, "password incorrect")
 			}
 			// 登录成功，清除失败计数

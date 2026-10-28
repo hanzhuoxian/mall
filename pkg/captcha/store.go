@@ -24,10 +24,12 @@ func NewRedisStore(rdb redis.UniversalClient) *RedisStore {
 	return &RedisStore{rdb: rdb, expiry: defaultExpiry}
 }
 
+// Set stores a captcha answer until the configured expiry.
 func (s *RedisStore) Set(id string, value string) error {
 	return s.rdb.Set(context.Background(), keyPrefix+id, value, s.expiry).Err()
 }
 
+// Get retrieves a captcha answer and optionally removes it.
 func (s *RedisStore) Get(id string, clear bool) string {
 	key := keyPrefix + id
 	val, err := s.rdb.Get(context.Background(), key).Result()
@@ -40,6 +42,7 @@ func (s *RedisStore) Get(id string, clear bool) string {
 	return val
 }
 
+// Verify reports whether answer matches the stored captcha value.
 func (s *RedisStore) Verify(id, answer string, clear bool) bool {
 	return s.Get(id, clear) == answer
 }

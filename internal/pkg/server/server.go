@@ -24,8 +24,6 @@ import (
 type APIServer struct {
 	SecureServingInfo   *SecureServingInfo
 	InsecureServingInfo *InsecureServingInfo
-	// ShutdownTimeout 是 Close 等待在途请求处理完成的上限，为 0 时回落到 DefaultShutdownTimeout。
-	ShutdownTimeout time.Duration
 	*gin.Engine
 	insecureServer  *http.Server
 	secureServer    *http.Server
@@ -33,6 +31,8 @@ type APIServer struct {
 	healthz         bool
 	enableMetrics   bool
 	enableProfiling bool
+	// ShutdownTimeout caps how long Close waits for in-flight requests.
+	ShutdownTimeout time.Duration
 }
 
 // initAPIServer 依次执行 Setup、InstallMiddlewares 和 InstallAPIs，完成服务器初始化。

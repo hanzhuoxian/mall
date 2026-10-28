@@ -53,11 +53,11 @@ func (h *UserController) CreateUser(c *gin.Context) {
 }
 
 type updateUserRequest struct {
+	Status   *int32 `json:"status"`
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
 	Nickname string `json:"nickname"`
 	Password string `json:"password"`
-	Status   int32  `json:"status"`
 }
 
 // UpdateUser 更新指定用户的信息。

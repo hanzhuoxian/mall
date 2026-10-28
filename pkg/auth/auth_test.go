@@ -42,21 +42,21 @@ func TestComparePassword(t *testing.T) {
 		t.Fatalf("加密失败: %v", err)
 	}
 
-	// 测试用例1：正确密码 → 必须返回 true
+	// 测试用例1：正确密码 → 必须返回 nil
 	err = ComparePassword(hashPwd, rawPwd)
 	if err != nil {
-		t.Error("正确密码对比失败，应该返回 true")
+		t.Error("正确密码对比失败，应该返回 nil")
 	}
 
-	// 测试用例2：错误密码 → 必须返回 false
+	// 测试用例2：错误密码 → 必须返回 error
 	err = ComparePassword(hashPwd, "wrong-password")
-	if err != nil {
-		t.Error("错误密码对比成功，应该返回 false")
+	if err == nil {
+		t.Error("错误密码对比成功，应该返回 error")
 	}
 
-	// 测试用例3：空哈希 + 任意密码 → false
+	// 测试用例3：空哈希 + 任意密码 → error
 	err = ComparePassword("", rawPwd)
-	if err != nil {
+	if err == nil {
 		t.Error("空哈希应该对比失败")
 	}
 
@@ -65,6 +65,6 @@ func TestComparePassword(t *testing.T) {
 	emptyHash, _ := GeneratePassword(emptyPwd)
 	err = ComparePassword(emptyHash, emptyPwd)
 	if err != nil {
-		t.Error("空密码正确对比应该返回 true")
+		t.Error("空密码正确对比应该返回 nil")
 	}
 }

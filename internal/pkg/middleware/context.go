@@ -5,6 +5,7 @@ package middleware
 import (
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
+
 	"github.com/hanzhuoxian/mall/pkg/logger"
 )
 

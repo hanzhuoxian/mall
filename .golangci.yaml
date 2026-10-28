@@ -34,6 +34,7 @@ linters:
       - vendor
       - third_party
       - testdata
+      - web/mall-admin/node_modules
 
 formatters:
   enable:

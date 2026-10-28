@@ -26,6 +26,7 @@ func NewOptions() *Options {
 	mysqlOpt.Database = "mall_user"
 	return &Options{
 		ServerRunOptions:       pkgoptions.NewServerOptions(),
+		LogOptions:             logger.NewOptions(),
 		MySQLOptions:           mysqlOpt,
 		GRPCOptions:            pkgoptions.NewGRPCOptions(),
 		InsecureServingOptions: pkgoptions.NewInsecureServingOptions(),

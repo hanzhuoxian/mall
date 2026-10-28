@@ -2,15 +2,17 @@ package errors
 
 import "fmt"
 
+// ErrorCode is an application-specific error identifier.
 type ErrorCode int
 
+// DefaultCode is the default application error code.
 var DefaultCode ErrorCode = 1
 
 type codeError struct {
 	err   error
-	code  ErrorCode
 	cause error
 	*stack
+	code ErrorCode
 }
 
 func (err *codeError) Error() string {
@@ -25,6 +27,7 @@ func (err *codeError) Unwrap() error {
 	return err.cause
 }
 
+// New creates an error with a code, formatted message, and captured stack.
 func New(code ErrorCode, format string, args ...any) error {
 	return &codeError{
 		code:  code,
@@ -33,6 +36,7 @@ func New(code ErrorCode, format string, args ...any) error {
 	}
 }
 
+// Wrap adds a code, formatted message, and stack to err.
 func Wrap(err error, code ErrorCode, format string, args ...any) error {
 	if err == nil {
 		return nil

@@ -13,20 +13,20 @@ func (err *codeError) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			fmt.Fprintf(s, "[code=%d] %s", err.code, err.err.Error())
+			_, _ = fmt.Fprintf(s, "[code=%d] %s", err.code, err.err.Error())
 			if err.cause != nil {
-				fmt.Fprintf(s, "\ncaused by: %+v", err.cause)
+				_, _ = fmt.Fprintf(s, "\ncaused by: %+v", err.cause)
 			}
 			if err.stack != nil {
-				err.stack.formatTo(s)
+				err.formatTo(s)
 			}
 			return
 		}
 		fallthrough
 	case 's':
-		io.WriteString(s, err.err.Error())
+		_, _ = io.WriteString(s, err.err.Error())
 	case 'q':
-		fmt.Fprintf(s, "%q", err.err.Error())
+		_, _ = fmt.Fprintf(s, "%q", err.err.Error())
 	}
 }
 
@@ -34,7 +34,7 @@ func (st *stack) formatTo(s fmt.State) {
 	frames := runtime.CallersFrames([]uintptr(*st))
 	for {
 		f, more := frames.Next()
-		fmt.Fprintf(s, "\n\t%s\n\t\t%s:%d", f.Function, f.File, f.Line)
+		_, _ = fmt.Fprintf(s, "\n\t%s\n\t\t%s:%d", f.Function, f.File, f.Line)
 		if !more {
 			break
 		}

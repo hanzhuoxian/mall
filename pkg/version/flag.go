@@ -23,7 +23,8 @@ const (
 
 const strRawVersion string = "raw"
 
-// IsBoolFlag indicates that this flag can be used as a boolean flag (i.e., --version will be treated as --version=true).
+// IsBoolFlag indicates that this flag can be used as a boolean flag (i.e., --version will be treated as
+// --version=true).
 func (v *versionValue) IsBoolFlag() bool {
 	return true
 }
@@ -33,7 +34,8 @@ func (v *versionValue) Get() any {
 	return v
 }
 
-// Set sets the version value based on the input string. It accepts "raw" to set VersionRaw, and parses boolean values for VersionTrue and VersionFalse.
+// Set sets the version value based on the input string. It accepts "raw" to set VersionRaw, and parses boolean values
+// for VersionTrue and VersionFalse.
 func (v *versionValue) Set(s string) error {
 	if s == strRawVersion {
 		*v = VersionRaw

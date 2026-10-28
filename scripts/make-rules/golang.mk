@@ -73,9 +73,9 @@ go.tidy:
 .PHONY: go.format
 go.format: install.verify.golines install.verify.goimports
 	@echo "===========> Formating codes"
-	@$(FIND) -type f -name '*.go' | $(XARGS) gofmt -s -w
-	@$(FIND) -type f -name '*.go' | $(XARGS) goimports -w -local $(ROOT_PACKAGE)
-	@$(FIND) -type f -name '*.go' | $(XARGS) golines -w --max-len=120 --reformat-tags --shorten-comments --ignore-generated .
+	@$(FIND) . -type f -name '*.go' | $(XARGS) gofmt -s -w
+	@$(FIND) . -type f -name '*.go' | $(XARGS) goimports -w -local $(ROOT_PACKAGE)
+	@$(FIND) . -type f -name '*.go' | $(XARGS) golines -w --max-len=120 --reformat-tags --shorten-comments --ignore-generated
 	@$(GO) mod edit -fmt
 
 .PHONY: go.lint
@@ -88,12 +88,12 @@ go.test: install.verify.go-junit-report
 	@echo "===========> Run unit test"
 	@set -o pipefail;$(GO) test -race -cover -coverprofile=$(OUTPUT_DIR)/coverage.out \
 		-timeout=10m -shuffle=on -short -v `go list ./...|\
-		egrep -v $(subst $(SPACE),'|',$(sort $(EXCLUDE_TESTS)))` 2>&1 | \
+		egrep -v 'web/mall-admin/node_modules$(if $(strip $(EXCLUDE_TESTS)),|$(subst $(SPACE),|,$(sort $(EXCLUDE_TESTS))))'` 2>&1 | \
 		tee >(go-junit-report --set-exit-code >$(OUTPUT_DIR)/report.xml)
-	@sed -i '/mock_.*.go/d' $(OUTPUT_DIR)/coverage.out # remove mock_.*.go files from test coverage
+	@sed '/mock_.*.go/d' $(OUTPUT_DIR)/coverage.out > $(OUTPUT_DIR)/coverage.tmp && mv $(OUTPUT_DIR)/coverage.tmp $(OUTPUT_DIR)/coverage.out # remove mock_.*.go files from test coverage
 	@$(GO) tool cover -html=$(OUTPUT_DIR)/coverage.out -o $(OUTPUT_DIR)/coverage.html
 
 .PHONY: go.test.cover
 go.test.cover: go.test
 	@$(GO) tool cover -func=$(OUTPUT_DIR)/coverage.out | \
-		awk -v target=$(COVERAGE) -f $(ROOT_DIR)/scripts/coverage.awk
+		awk -v target=$(COVERAGE) -f $(ROOT_DIR)/scripts/check-coverage.awk

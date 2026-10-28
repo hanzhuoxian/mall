@@ -24,17 +24,23 @@ func initApiServer(cfg *config.Config) (*apiserver, error) {
 	if err != nil {
 		return nil, err
 	}
-	redisClient, err := provideRedis(cfg)
+	userController := controller.NewUserController(userClient)
+	universalClient, err := provideRedis(cfg)
 	if err != nil {
 		return nil, err
 	}
-	captcha := provideCaptcha(redisClient)
-	userController := controller.NewUserController(userClient)
+	captcha := provideCaptcha(universalClient)
 	captchaController := controller.NewCaptchaController(captcha)
-	controllers := controller.NewControllers(userController, captchaController)
-	authStrategy := NewAutoAuth(cfg, userClient, captcha, redisClient)
-	jwtStrategy := NewJWTAuth(cfg, userClient, captcha, redisClient)
-	apiserverApiserver, err := newApiServer(gracefulShutdown, apiServer, controllers, authStrategy, jwtStrategy)
+	service, err := controller.NewMarketplaceService(cfg)
+	if err != nil {
+		return nil, err
+	}
+	marketplaceController := controller.NewMarketplaceController(service, userClient)
+	registerController := controller.NewRegisterController(userClient, captcha)
+	controllers := controller.NewControllers(userController, captchaController, marketplaceController, registerController)
+	authStrategy := NewAutoAuth(cfg, userClient, captcha, universalClient)
+	jwtStrategy := NewJWTAuth(cfg, userClient, captcha, universalClient)
+	apiserverApiserver, err := newApiServer(gracefulShutdown, apiServer, controllers, authStrategy, jwtStrategy, service)
 	if err != nil {
 		return nil, err
 	}

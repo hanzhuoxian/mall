@@ -2,6 +2,7 @@ package response
 
 import (
 	"encoding/json"
+	stderrors "errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,10 +17,10 @@ import (
 
 // Response is the unified envelope for all API responses.
 type Response struct {
-	Code      int    `json:"code"`
+	Data      any    `json:"data,omitempty"`
 	Message   string `json:"message"`
 	Reference string `json:"reference,omitempty"`
-	Data      any    `json:"data,omitempty"`
+	Code      int    `json:"code"`
 }
 
 // grpcToHTTP maps gRPC status codes to HTTP status codes.
@@ -48,6 +49,12 @@ func grpcToHTTP(code codes.Code) int {
 // HTTP status and code. On success, it returns HTTP 200 with data.
 func Write(c *gin.Context, err error, data any) {
 	if err != nil {
+		var httpErr *HTTPError
+		if stderrors.As(err, &httpErr) {
+			logger.Errorf("%v", err)
+			c.JSON(httpErr.Status, Response{Code: httpErr.Status, Message: httpErr.Message})
+			return
+		}
 		if st, ok := status.FromError(err); ok {
 			logger.Errorf("gRPC error: code=%s message=%s", st.Code(), st.Message())
 			c.JSON(grpcToHTTP(st.Code()), Response{

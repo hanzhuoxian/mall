@@ -11,10 +11,21 @@ install.reshim:
 .PHONY: install.go-junit-report
 install.go-junit-report:
 	@$(GO) install github.com/jstemmer/go-junit-report@latest
+	@$(MAKE) install.reshim
 
 .PHONY: install.gsemver
 install.gsemver:
 	@$(GO) install github.com/arnaud-deprez/gsemver@latest
+
+.PHONY: install.golines
+install.golines:
+	@$(GO) install github.com/golangci/golines@v0.16.0
+	@$(MAKE) install.reshim
+
+.PHONY: install.goimports
+install.goimports:
+	@$(GO) install golang.org/x/tools/cmd/goimports@v0.50.0
+	@$(MAKE) install.reshim
 
 .PHONY: install.git-chglog
 install.git-chglog:

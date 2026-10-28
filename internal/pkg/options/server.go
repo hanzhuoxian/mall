@@ -13,9 +13,9 @@ import (
 // ServerRunOptions 包含 HTTP API 服务器的基本运行选项，如模式、健康检查和中间件列表。
 type ServerRunOptions struct {
 	Mode            string        `json:"mode"             mapstructure:"mode"`
+	JWTSecret       string        `json:"jwt-secret"       mapstructure:"jwt-secret"`
 	Middlewares     []string      `json:"middlewares"      mapstructure:"middlewares"`
 	Healthz         bool          `json:"healthz"          mapstructure:"healthz"`
-	JWTSecret       string        `json:"jwt-secret"       mapstructure:"jwt-secret"`
 	ShutdownTimeout time.Duration `json:"shutdown-timeout" mapstructure:"shutdown-timeout"`
 }
 

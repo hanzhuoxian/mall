@@ -29,7 +29,10 @@ func helpCommand(name string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "help [command]",
 		Short: "Help about any command",
-		Long:  fmt.Sprintf("Help provides help for any command in the application.\nSimply type %s help [path to command] for full details.", name),
+		Long: fmt.Sprintf(
+			"Help provides help for any command in the application.\nSimply type %s help [path to command] for full details.",
+			name,
+		),
 		RunE: func(c *cobra.Command, args []string) error {
 			cmd, _, err := c.Root().Find(args)
 			if cmd == nil || err != nil {

@@ -1,4 +1,13 @@
 export default {
+  'menu.catalog': '逛商城',
+  'menu.shops': '商家入驻',
+  'menu.products': '商品管理',
+  'menu.categories': '商品分类',
+  'menu.cart': '购物车',
+  'menu.orders': '订单与售后',
+  'menu.addresses': '收货地址',
+  'menu.finance': '结算概览',
+  'menu.audit': '操作审计',
   'menu.welcome': '欢迎',
   'menu.more-blocks': '更多区块',
   'menu.home': '首页',

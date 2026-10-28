@@ -11,6 +11,7 @@ import (
 	"github.com/hanzhuoxian/mall/internal/userserver/store"
 )
 
+// DBNameUser is the database name used by the user service.
 const DBNameUser = "mall_user"
 
 // ProviderSet is used by Wire.

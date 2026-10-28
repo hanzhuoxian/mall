@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hanzhuoxian/mall/pkg/logger"
 	"go.uber.org/zap"
 	gormlogger "gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
+
+	"github.com/hanzhuoxian/mall/pkg/logger"
 )
 
 // GormLogger 是基于 zap 的 GORM 日志实现，支持日志级别控制、慢查询阈值告警

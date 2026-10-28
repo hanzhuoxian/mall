@@ -4,6 +4,7 @@ package userserver
 
 import (
 	"github.com/google/wire"
+
 	"github.com/hanzhuoxian/mall/internal/userserver/cache/redis"
 	"github.com/hanzhuoxian/mall/internal/userserver/config"
 	"github.com/hanzhuoxian/mall/internal/userserver/service"

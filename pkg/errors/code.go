@@ -6,8 +6,13 @@ import (
 	"sync"
 )
 
-var unknownCoder = defaultCoder{DefaultCode, http.StatusInternalServerError, "An internal server error occurred", ""}
+var unknownCoder = defaultCoder{
+	Ext:  "An internal server error occurred",
+	C:    DefaultCode,
+	HTTP: http.StatusInternalServerError,
+}
 
+// Coder maps an application error code to its HTTP response details.
 type Coder interface {
 	// HTTP status that should be used for the associated error code.
 	HTTPStatus() int
@@ -23,22 +28,15 @@ type Coder interface {
 }
 
 type defaultCoder struct {
-	// C refers to the integer code of the ErrCode.
-	C ErrorCode
-
-	// HTTP status that should be used for the associated error code.
+	Ext  string
+	Ref  string
+	C    ErrorCode
 	HTTP int
-
-	// External (user) facing error text.
-	Ext string
-
-	// Ref specify the reference document.
-	Ref string
 }
 
-// pkg/errors/code.go 新增
+// NewCoder returns a Coder with the supplied code, HTTP status, message, and reference.
 func NewCoder(code ErrorCode, httpStatus int, msg, ref string) Coder {
-	return defaultCoder{code, httpStatus, msg, ref}
+	return defaultCoder{Ext: msg, Ref: ref, C: code, HTTP: httpStatus}
 }
 
 func (coder defaultCoder) Code() ErrorCode {
@@ -59,6 +57,8 @@ func (coder defaultCoder) HTTPStatus() int {
 	}
 	return coder.HTTP
 }
+
+// IsCode reports whether err contains the specified application error code.
 func IsCode(err error, code ErrorCode) bool {
 	if v, ok := err.(*codeError); ok {
 		if v.code == code {
@@ -72,6 +72,7 @@ func IsCode(err error, code ErrorCode) bool {
 	return false
 }
 
+// ParseCoder returns the registered coder for err, or the default coder.
 func ParseCoder(err error) Coder {
 	if err == nil {
 		return nil
@@ -87,6 +88,7 @@ func ParseCoder(err error) Coder {
 var codes = map[ErrorCode]Coder{}
 var codeMux sync.Mutex
 
+// Register associates coder with its error code.
 func Register(coder Coder) {
 	if coder.Code() == 0 {
 		panic("code `0` is reserved ")
@@ -96,6 +98,7 @@ func Register(coder Coder) {
 	codes[coder.Code()] = coder
 }
 
+// MustRegister associates coder with its error code and panics on duplicates.
 func MustRegister(coder Coder) {
 	if coder.Code() == 0 {
 		panic("code `0` is reserved ")

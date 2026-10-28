@@ -7,20 +7,22 @@ import (
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
 )
 
-// AuthBasicName 表示 HTTP Basic 认证在 Authorization 头中使用的方案名称。
+// AuthJWTName is the Authorization scheme name used for JWT authentication.
 const AuthJWTName = "Bearer"
 
-// JWTStrategy
+// JWTStrategy adapts the gin-jwt middleware to the application's auth strategy.
 type JWTStrategy struct {
 	ginjwt.GinJWTMiddleware
 }
 
 var _ middleware.AuthStrategy = &JWTStrategy{}
 
+// NewJWTStrategy wraps the configured gin-jwt middleware.
 func NewJWTStrategy(g ginjwt.GinJWTMiddleware) JWTStrategy {
 	return JWTStrategy{g}
 }
 
+// AuthFunc returns the JWT authentication handler.
 func (j JWTStrategy) AuthFunc() gin.HandlerFunc {
 	return j.MiddlewareFunc()
 }

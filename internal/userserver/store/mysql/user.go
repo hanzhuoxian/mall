@@ -34,7 +34,11 @@ func (user *users) GetByPhone(ctx context.Context, phone string, opts model.GetO
 	return u, err
 }
 
-func (user *users) GetByInstanceID(ctx context.Context, instanceID string, opts model.GetOptions) (*model.SysUser, error) {
+func (user *users) GetByInstanceID(
+	ctx context.Context,
+	instanceID string,
+	opts model.GetOptions,
+) (*model.SysUser, error) {
 	u := &model.SysUser{}
 	err := user.db.WithContext(ctx).Where("instance_id = ?", instanceID).First(u).Error
 	return u, err

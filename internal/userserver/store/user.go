@@ -6,6 +6,7 @@ import (
 	"github.com/hanzhuoxian/mall/internal/userserver/model"
 )
 
+// UserStore defines persistence operations for users.
 type UserStore interface {
 	Get(ctx context.Context, username string, opts model.GetOptions) (*model.SysUser, error)
 	GetByEmail(ctx context.Context, email string, opts model.GetOptions) (*model.SysUser, error)

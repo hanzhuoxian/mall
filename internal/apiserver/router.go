@@ -8,16 +8,24 @@ import (
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware/auth"
 )
 
-func installRoutes(r *gin.Engine, controllers *controller.Controllers, authStrategy middleware.AuthStrategy, jwtStrategy auth.JWTStrategy) {
+func installRoutes(
+	r *gin.Engine,
+	controllers *controller.Controllers,
+	authStrategy middleware.AuthStrategy,
+	jwtStrategy auth.JWTStrategy,
+) {
 	r.GET("/captcha", controllers.Captcha.Generate)
 	r.POST("/login", jwtStrategy.LoginHandler)
+	r.POST("/register", controllers.Register.Register)
 	r.POST("/logout", jwtStrategy.LogoutHandler)
 	r.POST("/refresh", jwtStrategy.RefreshHandler)
 
+	controllers.Marketplace.Register(r, authStrategy.AuthFunc())
 	v1 := r.Group("/v1")
 	{
 		users := v1.Group("/users", authStrategy.AuthFunc())
 		users.GET("/me", controllers.User.GetMe)
+		users.Use(controllers.Marketplace.AdminOnly)
 		users.POST("", controllers.User.CreateUser)
 		users.DELETE("", controllers.User.DeleteCollection)
 		users.GET("", controllers.User.ListUsers)

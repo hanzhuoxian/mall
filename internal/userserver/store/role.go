@@ -6,6 +6,7 @@ import (
 	"github.com/hanzhuoxian/mall/internal/userserver/model"
 )
 
+// RoleStore defines persistence operations for roles.
 type RoleStore interface {
 	GetByInstanceID(ctx context.Context, instanceID string, opts model.GetOptions) (*model.SysRole, error)
 	Create(ctx context.Context, u *model.SysRole, opts model.CreateOptions) error

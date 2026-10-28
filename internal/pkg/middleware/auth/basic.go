@@ -22,7 +22,9 @@ type BasicStrategy struct {
 var _ middleware.AuthStrategy = &BasicStrategy{}
 
 // NewBasicStrategy 使用给定的比较函数构造并返回一个 BasicStrategy。
-func NewBasicStrategy(authenticate func(ctx context.Context, identifier, password string) (instanceID string, ok bool)) BasicStrategy {
+func NewBasicStrategy(
+	authenticate func(ctx context.Context, identifier, password string) (instanceID string, ok bool),
+) BasicStrategy {
 	return BasicStrategy{authenticate: authenticate}
 }
 

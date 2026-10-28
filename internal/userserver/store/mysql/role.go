@@ -3,8 +3,9 @@ package mysql
 import (
 	"context"
 
-	"github.com/hanzhuoxian/mall/internal/userserver/model"
 	"gorm.io/gorm"
+
+	"github.com/hanzhuoxian/mall/internal/userserver/model"
 )
 
 type roles struct {
@@ -15,7 +16,11 @@ func newRoles(ds *datastore) *roles {
 	return &roles{ds.db}
 }
 
-func (role *roles) GetByInstanceID(ctx context.Context, instanceID string, opts model.GetOptions) (*model.SysRole, error) {
+func (role *roles) GetByInstanceID(
+	ctx context.Context,
+	instanceID string,
+	opts model.GetOptions,
+) (*model.SysRole, error) {
 	r := &model.SysRole{}
 	err := role.db.WithContext(ctx).Where("instance_id = ?", instanceID).First(r).Error
 	return r, err

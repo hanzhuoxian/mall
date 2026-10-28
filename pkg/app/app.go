@@ -89,6 +89,7 @@ func WithValidArgs(args cobra.PositionalArgs) Option {
 	}
 }
 
+// WithCommands adds commands to the application.
 func WithCommands(cmds ...*Command) Option {
 	return func(a *App) {
 		a.commands = append(a.commands, cmds...)

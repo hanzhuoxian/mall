@@ -3,6 +3,7 @@ package mallctl
 import (
 	"fmt"
 
+	marketmodel "github.com/hanzhuoxian/mall/internal/marketplace/model"
 	"github.com/hanzhuoxian/mall/internal/pkg/options"
 	usermodel "github.com/hanzhuoxian/mall/internal/userserver/model"
 	"github.com/hanzhuoxian/mall/pkg/app"
@@ -53,7 +54,7 @@ func runMigrate(opts *migrateOptions) error {
 		return err
 	}
 
-	return nil
+	return migrateDB(opts.MySQL, "mall", marketmodel.Models()...)
 }
 
 func migrateDB(base *options.MySQLOptions, database string, models ...any) error {

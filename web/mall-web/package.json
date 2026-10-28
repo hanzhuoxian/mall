@@ -1,0 +1,31 @@
+{
+  "name": "mall-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env UMI_ENV=dev max dev",
+    "build": "max build",
+    "test": "vitest run",
+    "tsc": "tsc --noEmit",
+    "lint": "biome lint src/app.tsx src/layouts src/pages src/services config"
+  },
+  "dependencies": {
+    "@umijs/max": "^4.6.57",
+    "antd": "^6.4.3",
+    "@ant-design/icons": "^6.2.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router-dom": "^6.3.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@biomejs/biome": "^2.4.16",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "cross-env": "^10.1.0",
+    "jsdom": "^29.1.1",
+    "typescript": "^6.0.3",
+    "vitest": "4.1.8"
+  }
+}

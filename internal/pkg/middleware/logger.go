@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hanzhuoxian/mall/pkg/logger"
 	"github.com/mattn/go-isatty"
+
+	"github.com/hanzhuoxian/mall/pkg/logger"
 )
 
 // defaultLogFormatter 默认的日志格式化函数，供 Logger 中间件使用。

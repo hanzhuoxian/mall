@@ -4,6 +4,7 @@ package apiserver
 
 import (
 	"github.com/google/wire"
+
 	"github.com/hanzhuoxian/mall/internal/apiserver/config"
 	"github.com/hanzhuoxian/mall/internal/apiserver/controller"
 )

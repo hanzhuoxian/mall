@@ -18,12 +18,14 @@ import (
 
 type identifierType int
 
+// Identifier constants name the supported login identifier formats.
 const (
 	IdentifierUsername identifierType = iota
 	IdentifierEmail
 	IdentifierPhone
 )
 
+// UserSrv defines user account operations.
 type UserSrv interface {
 	Create(ctx context.Context, req *userv1.CreateUserRequest) (*userv1.CreateUserResponse, error)
 	Update(ctx context.Context, req *userv1.UpdateUserRequest) (*userv1.UpdateUserResponse, error)
@@ -54,11 +56,12 @@ func (s *userSrv) Create(ctx context.Context, req *userv1.CreateUserRequest) (*u
 			InstanceID: uuid.New().String(),
 			Name:       req.Name,
 		},
-		Email:    req.Email,
-		Phone:    req.Phone,
-		Username: req.Username,
-		Nickname: req.Nickname,
-		Password: hashedPassword,
+		Email:      req.Email,
+		Phone:      req.Phone,
+		Username:   req.Username,
+		Nickname:   req.Nickname,
+		Password:   hashedPassword,
+		UserStatus: 1,
 	}
 	if err := s.store.Users().Create(ctx, user, model.CreateOptions{}); err != nil {
 		return nil, err
@@ -87,8 +90,11 @@ func (s *userSrv) Update(ctx context.Context, req *userv1.UpdateUserRequest) (*u
 		}
 		user.Password = hashed
 	}
-	if req.Status != 0 {
-		user.UserStatus = int(req.Status)
+	if req.Status != nil {
+		if *req.Status != 0 && *req.Status != 1 {
+			return nil, status.Error(codes.InvalidArgument, "status must be 0 or 1")
+		}
+		user.UserStatus = int(*req.Status)
 	}
 	if err := s.store.Users().Update(ctx, user, model.UpdateOptions{}); err != nil {
 		return nil, err
@@ -101,14 +107,20 @@ func (s *userSrv) Delete(ctx context.Context, req *userv1.DeleteUserRequest) (*u
 	return &userv1.DeleteUserResponse{}, err
 }
 
-func (s *userSrv) DeleteCollection(ctx context.Context, req *userv1.DeleteCollectionRequest) (*userv1.DeleteCollectionResponse, error) {
+func (s *userSrv) DeleteCollection(
+	ctx context.Context,
+	req *userv1.DeleteCollectionRequest,
+) (*userv1.DeleteCollectionResponse, error) {
 	err := s.store.Users().DeleteCollection(ctx, req.InstanceIds, model.DeleteOptions{Unscoped: req.Unscoped})
 	return &userv1.DeleteCollectionResponse{}, err
 }
 
 func (s *userSrv) Get(ctx context.Context, req *userv1.GetUserRequest) (*userv1.GetUserResponse, error) {
 	user, err := s.store.Users().GetByInstanceID(ctx, req.InstanceId, model.GetOptions{})
-	return &userv1.GetUserResponse{User: user.ToProto()}, err
+	if err != nil {
+		return nil, err
+	}
+	return &userv1.GetUserResponse{User: user.ToProto()}, nil
 }
 
 func (s *userSrv) List(ctx context.Context, req *userv1.ListUsersRequest) (*userv1.ListUsersResponse, error) {
@@ -135,7 +147,10 @@ func (s *userSrv) List(ctx context.Context, req *userv1.ListUsersRequest) (*user
 	return &userv1.ListUsersResponse{Users: users, Total: userList.TotalCount}, nil
 }
 
-func (s *userSrv) AuthenticateUser(ctx context.Context, req *userv1.AuthenticateUserRequest) (*userv1.AuthenticateUserResponse, error) {
+func (s *userSrv) AuthenticateUser(
+	ctx context.Context,
+	req *userv1.AuthenticateUserRequest,
+) (*userv1.AuthenticateUserResponse, error) {
 	var user *model.SysUser
 	var err error
 	switch DetectIdentifierType(req.Identifier) {
@@ -152,12 +167,16 @@ func (s *userSrv) AuthenticateUser(ctx context.Context, req *userv1.Authenticate
 		}
 		return nil, err
 	}
+	if user.UserStatus != 1 {
+		return nil, status.Error(codes.Unauthenticated, "account disabled")
+	}
 	if err := auth.ComparePassword(user.Password, req.Password); err != nil {
 		return nil, status.Error(codes.Unauthenticated, "password incorrect")
 	}
 	return &userv1.AuthenticateUserResponse{InstanceId: user.InstanceID}, nil
 }
 
+// DetectIdentifierType identifies whether id is an email, phone, or username.
 func DetectIdentifierType(id string) identifierType {
 	if regex.Email.MatchString(id) {
 		return IdentifierEmail

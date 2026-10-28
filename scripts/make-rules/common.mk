@@ -1,6 +1,9 @@
 
 SHELL := $(shell which bash)
 
+FIND ?= find
+XARGS ?= xargs
+
 
 # include the common make file
 COMMON_SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))

@@ -18,8 +18,8 @@ vi.mock('@umijs/max', () => ({
   Link: ({ children }: any) => children,
 }));
 
-vi.mock('@/services/ant-design-pro/api', () => ({
-  currentUser: mockQueryCurrentUser,
+vi.mock('@/pages/user/login/service', () => ({
+  getCurrentUser: mockQueryCurrentUser,
 }));
 
 vi.mock('@/components', () => ({
@@ -61,16 +61,14 @@ describe('app getInitialState', () => {
   it('should fetch currentUser when not on login page', async () => {
     const { getInitialState } = await import('./app');
     mockQueryCurrentUser.mockResolvedValue({
-      data: {
-        name: 'Test User',
-        access: 'admin',
-      },
+      success: true,
+      data: { user: { nickname: 'Test User', username: 'admin' } },
     });
 
     const state = await getInitialState();
 
     expect(mockQueryCurrentUser).toHaveBeenCalled();
-    expect(state.currentUser).toEqual({
+    expect(state.currentUser).toMatchObject({
       name: 'Test User',
       access: 'admin',
     });
@@ -124,7 +122,8 @@ describe('app getInitialState', () => {
   it('should include default settings in initial state', async () => {
     const { getInitialState } = await import('./app');
     mockQueryCurrentUser.mockResolvedValue({
-      data: { name: 'User' },
+      success: true,
+      data: { user: { nickname: 'User', username: 'buyer' } },
     });
 
     const state = await getInitialState();
@@ -135,12 +134,13 @@ describe('app getInitialState', () => {
   it('fetchUserInfo should return user data on success', async () => {
     const { getInitialState } = await import('./app');
     mockQueryCurrentUser.mockResolvedValue({
-      data: { name: 'Fetched User', access: 'user' },
+      success: true,
+      data: { user: { nickname: 'Fetched User', username: 'buyer' } },
     });
 
     const state = await getInitialState();
 
     const user = await state.fetchUserInfo?.();
-    expect(user).toEqual({ name: 'Fetched User', access: 'user' });
+    expect(user).toMatchObject({ name: 'Fetched User', access: 'user' });
   });
 });

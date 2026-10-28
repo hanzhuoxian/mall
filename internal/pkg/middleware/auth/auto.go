@@ -4,16 +4,19 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
 )
 
 const authHeaderCount = 2
 
+// AutoStrategy selects an authentication strategy from the Authorization header.
 type AutoStrategy struct {
 	basic middleware.AuthStrategy
 	jwt   middleware.AuthStrategy
 }
 
+// NewAutoStrategy combines Basic and JWT authentication strategies.
 func NewAutoStrategy(basic, jwt middleware.AuthStrategy) middleware.AuthStrategy {
 	return &AutoStrategy{
 		basic: basic,
@@ -21,6 +24,7 @@ func NewAutoStrategy(basic, jwt middleware.AuthStrategy) middleware.AuthStrategy
 	}
 }
 
+// AuthFunc returns middleware that dispatches to Basic or JWT authentication.
 func (auto *AutoStrategy) AuthFunc() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		operator := middleware.AuthOperator{}

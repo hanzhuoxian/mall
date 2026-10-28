@@ -456,6 +456,9 @@ const Login: React.FC = () => {
           </div>
         </LoginForm>
       </div>
+      <div style={{ textAlign: 'center', padding: 16 }}>
+        <a href="/user/register">没有账号？注册消费者／商家账号</a>
+      </div>
       <Footer />
     </div>
   );

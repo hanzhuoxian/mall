@@ -6,7 +6,9 @@ import (
 	"github.com/hanzhuoxian/mall/pkg/errors"
 )
 
+// Error codes for request validation and authentication failures.
 const (
+	// ErrSuccess is the reserved success code.
 	ErrSuccess errors.ErrorCode = 0
 	ErrBind                     = iota + 1
 	ErrValidation
@@ -15,10 +17,13 @@ const (
 )
 
 const (
+	// ErrDatabase represents a database failure.
 	ErrDatabase errors.ErrorCode = iota + 100100
 )
 
+// Error codes for encryption, signatures, and authentication failures.
 const (
+	// ErrEncrypt represents a password encryption failure.
 	ErrEncrypt errors.ErrorCode = iota + 100200
 	ErrSignatureInvalid
 	ErrExpired

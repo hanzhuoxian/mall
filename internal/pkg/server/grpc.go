@@ -3,8 +3,9 @@ package server
 import (
 	"net"
 
-	"github.com/hanzhuoxian/mall/pkg/logger"
 	"google.golang.org/grpc"
+
+	"github.com/hanzhuoxian/mall/pkg/logger"
 )
 
 // GRPCServer 封装了标准 gRPC 服务器，持有监听地址并提供统一的启停接口。

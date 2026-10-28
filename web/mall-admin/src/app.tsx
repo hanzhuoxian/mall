@@ -44,6 +44,7 @@ export async function getInitialState(): Promise<{
           email: u.email,
           userid: u.instanceId,
           phone: u.phone,
+          access: u.username === 'admin' ? 'admin' : 'user',
         } as API.CurrentUser;
       }
     } catch (_error) {
@@ -112,7 +113,7 @@ export const layout: RunTimeLayoutConfig = ({
     onPageChange: () => {
       const { location } = history;
       // 如果没有登录，重定向到 login
-      if (!initialState?.currentUser && location.pathname !== loginPath) {
+      if (!initialState?.currentUser && ![loginPath, '/user/register'].includes(location.pathname)) {
         history.replace(
           `${loginPath}?redirect=${encodeURIComponent(location.pathname + location.search + location.hash)}`,
         );
@@ -189,7 +190,7 @@ export const layout: RunTimeLayoutConfig = ({
  * @doc https://umijs.org/docs/max/request#配置
  */
 export const request: RequestConfig = {
-  baseURL: isDev ? '' : 'http://localhost:9090',
+  baseURL: '',
   ...errorConfig,
 };
 

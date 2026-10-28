@@ -20,6 +20,7 @@ services:
       MYSQL_PASSWORD: mall
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./mysql:/docker-entrypoint-initdb.d:ro
 
   mongo:
     image: mongo:7.0
