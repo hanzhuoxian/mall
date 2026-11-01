@@ -67,3 +67,21 @@ func (s *datastore) DeleteCart(ctx context.Context, userID string, ids []string)
 		s.db.WithContext(ctx).Where("user_id = ? AND id IN ?", userID, ids).Delete(&model.CartItem{}).Error,
 	)
 }
+
+func (s *datastore) ListFavorites(ctx context.Context, userID string, opts model.ListOptions) (model.Page[model.Favorite], error) {
+	db := s.db.WithContext(ctx)
+	query := db.Model(&model.Favorite{}).Preload("Product").Where("user_id = ? AND product_id IN (?)", userID,
+		db.Model(&model.Product{}).Select("id").Where("status = ? AND shop_id IN (?)", "approved",
+			db.Model(&model.Shop{}).Select("id").Where("status = ?", "approved")))
+	return list[model.Favorite](query, opts)
+}
+
+func (s *datastore) PutFavorite(ctx context.Context, favorite *model.Favorite) error {
+	return normalizeError(s.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "user_id"}, {Name: "product_id"}}, DoNothing: true,
+	}).Create(favorite).Error)
+}
+
+func (s *datastore) DeleteFavorite(ctx context.Context, userID, productID string) error {
+	return normalizeError(s.db.WithContext(ctx).Where("user_id = ? AND product_id = ?", userID, productID).Delete(&model.Favorite{}).Error)
+}

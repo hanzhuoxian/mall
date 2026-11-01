@@ -119,3 +119,35 @@ func TestCatalogPaginationAndSummaryScopes(t *testing.T) {
 		t.Fatalf("denied page = %+v", denied)
 	}
 }
+
+func TestCatalogKeywordSearchMatchesNameAndDescription(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	shop := model.Shop{Base: model.Base{ID: "search-shop"}, OwnerID: "seller", Status: "approved"}
+	if err := s.SaveShop(ctx, &shop); err != nil {
+		t.Fatal(err)
+	}
+	for _, product := range []model.Product{
+		{Base: model.Base{ID: "name-match"}, ShopID: shop.ID, Name: "手冲咖啡壶", Description: "玻璃器具", Status: "approved"},
+		{Base: model.Base{ID: "description-match"}, ShopID: shop.ID, Name: "分享壶", Description: "适合手冲咖啡", Status: "approved"},
+		{Base: model.Base{ID: "partial-match"}, ShopID: shop.ID, Name: "咖啡杯", Description: "陶瓷", Status: "approved"},
+	} {
+		if err := s.SaveProduct(ctx, &product); err != nil {
+			t.Fatal(err)
+		}
+	}
+	page, err := s.ListProducts(ctx, model.ProductFilter{Catalog: true, Keyword: "手冲 咖啡"}, model.ListOptions{Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if page.Total != 2 || len(page.Items) != 2 {
+		t.Fatalf("keyword search result = %+v", page)
+	}
+	matched := map[string]bool{}
+	for _, product := range page.Items {
+		matched[product.ID] = true
+	}
+	if !matched["name-match"] || !matched["description-match"] {
+		t.Fatalf("name and description matches missing: %+v", matched)
+	}
+}

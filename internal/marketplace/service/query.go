@@ -18,9 +18,32 @@ func (s *Service) Catalog(
 	name, categoryID string,
 	opts model.ListOptions,
 ) (model.Page[model.Product], error) {
+	if s.search != nil && name != "" {
+		page, err := s.search.Search(ctx, name, normalizePage(opts))
+		if err == nil {
+			visible := make([]model.Product, 0, len(page.Items))
+			for _, hit := range page.Items {
+				product, lookupErr := s.store.CatalogProduct(ctx, hit.ID)
+				if lookupErr == nil {
+					visible = append(visible, product)
+				}
+			}
+			page.Items = visible
+			if categoryID != "" {
+				filtered := visible[:0]
+				for _, product := range visible {
+					if product.CategoryID == categoryID {
+						filtered = append(filtered, product)
+					}
+				}
+				page.Items = filtered
+			}
+			return page, nil
+		}
+	}
 	return s.store.ListProducts(
 		ctx,
-		model.ProductFilter{Name: name, CategoryID: categoryID, Catalog: true},
+		model.ProductFilter{Keyword: name, CategoryID: categoryID, Catalog: true},
 		normalizePage(opts),
 	)
 }
@@ -78,6 +101,11 @@ func (s *Service) Cart(
 	opts model.ListOptions,
 ) (model.Page[model.CartItem], error) {
 	return s.store.ListCart(ctx, actor.ID, normalizePage(opts))
+}
+
+// Favorites returns the signed-in user's currently visible favorite products.
+func (s *Service) Favorites(ctx context.Context, actor model.Actor, opts model.ListOptions) (model.Page[model.Favorite], error) {
+	return s.store.ListFavorites(ctx, actor.ID, normalizePage(opts))
 }
 
 func orderFilter(actor model.Actor, scope string) model.OrderFilter {

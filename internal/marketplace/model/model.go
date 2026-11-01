@@ -60,6 +60,14 @@ type CartItem struct {
 	Quantity  int64  `json:"quantity"`
 }
 
+// Favorite 保存用户收藏的商品。
+type Favorite struct {
+	Product *Product `json:"product,omitempty" gorm:"foreignKey:ProductID"`
+	Base
+	UserID    string `json:"userId"    gorm:"size:64;uniqueIndex:favorite_owner_product"`
+	ProductID string `json:"productId" gorm:"size:36;uniqueIndex:favorite_owner_product"`
+}
+
 // Checkout 记录结算幂等键和请求指纹。
 type Checkout struct {
 	Base
@@ -107,6 +115,14 @@ type Audit struct {
 	Detail   string `json:"detail"   gorm:"size:1000"`
 }
 
+// SearchOutbox stores durable product search synchronization events.
+type SearchOutbox struct {
+	Base
+	ProductID string `json:"productId" gorm:"size:36;index"`
+	Operation string `json:"operation" gorm:"size:16"`
+	Attempts  int    `json:"attempts"`
+}
+
 // Models 返回商城迁移涉及的全部数据模型。
 func Models() []any {
 	return []any{
@@ -115,9 +131,11 @@ func Models() []any {
 		&Product{},
 		&Address{},
 		&CartItem{},
+		&Favorite{},
 		&Checkout{},
 		&Order{},
 		&OrderItem{},
 		&Audit{},
+		&SearchOutbox{},
 	}
 }

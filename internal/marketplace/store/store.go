@@ -31,6 +31,11 @@ type Store interface {
 	CatalogProduct(context.Context, string) (model.Product, error)
 	ProductsByIDs(context.Context, []string) ([]model.Product, error)
 	ListProducts(context.Context, model.ProductFilter, model.ListOptions) (model.Page[model.Product], error)
+	ProductsByShop(context.Context, string, model.ListOptions) (model.Page[model.Product], error)
+	CreateSearchOutbox(context.Context, *model.SearchOutbox) error
+	PendingSearchOutbox(context.Context, int) ([]model.SearchOutbox, error)
+	DeleteSearchOutbox(context.Context, string) error
+	IncrementSearchOutboxAttempts(context.Context, string) error
 	SaveProduct(context.Context, *model.Product) error
 	AdjustStock(context.Context, string, int64) error
 
@@ -43,6 +48,9 @@ type Store interface {
 	CartByIDs(context.Context, string, []string) ([]model.CartItem, error)
 	PutCart(context.Context, *model.CartItem) error
 	DeleteCart(context.Context, string, []string) error
+	ListFavorites(context.Context, string, model.ListOptions) (model.Page[model.Favorite], error)
+	PutFavorite(context.Context, *model.Favorite) error
+	DeleteFavorite(context.Context, string, string) error
 
 	CreateCheckout(context.Context, *model.Checkout) error
 	CheckoutByKey(context.Context, string, string) (model.Checkout, error)

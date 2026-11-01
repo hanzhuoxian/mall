@@ -23,6 +23,13 @@ body { margin: 0; }
 .category-row { display: flex; gap: 9px; overflow-x: auto; margin: 28px 0; }
 .product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
 .product-card { overflow: hidden; border-radius: 14px; background: #fff; color: inherit; text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
+.product-card-link { display: block; color: inherit; text-decoration: none; }
+.product-card-link img, .product-card-link > .image-placeholder { display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+.product-card-copy { padding: 14px 15px 10px; }
+.product-card-copy h2 { margin: 0 0 8px; font-size: 15px; }
+.product-card-copy p { margin: 0; color: #b35334; font-size: 18px; font-weight: 700; }
+.favorite-actions { display: flex; gap: 8px; padding: 0 15px 15px; }
+.favorite-actions .ant-btn { flex: 1; }
 .product-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px #17251c12; }
 .product-image { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: linear-gradient(135deg, #eceee8, #f6f4ed); }
 .product-info { padding: 14px 15px 17px; }

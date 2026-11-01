@@ -7,6 +7,7 @@ afterEach(() => vi.unstubAllGlobals());
 it('loads a direct product URL and adds it to cart for a signed-in shopper', async () => {
   const fetcher = vi.fn()
     .mockResolvedValueOnce(new Response(JSON.stringify({ code: 0, data: { id: 'p-2', name: '陶杯', description: '手作陶杯', price: 6800, stock: 5, image: '' } }), { status: 200 }))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ code: 0, data: { items: [], total: 0 } }), { status: 200 }))
     .mockResolvedValueOnce(new Response(JSON.stringify({ code: 0, data: { id: 'cart-1' } }), { status: 200 }));
   vi.stubGlobal('fetch', fetcher);
   vi.stubGlobal('localStorage', { getItem: () => 'token', setItem: () => {}, removeItem: () => {} });

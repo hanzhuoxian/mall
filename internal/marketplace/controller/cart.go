@@ -40,3 +40,16 @@ func (h *MarketplaceController) putCart(c *gin.Context) {
 func (h *MarketplaceController) deleteCart(c *gin.Context) {
 	respond(c, nil, h.service.DeleteCart(c.Request.Context(), actor(c), c.Param("id")))
 }
+
+func (h *MarketplaceController) favorites(c *gin.Context) {
+	data, err := h.service.Favorites(c.Request.Context(), actor(c), pagination(c))
+	respond(c, data, err)
+}
+
+func (h *MarketplaceController) putFavorite(c *gin.Context) {
+	respond(c, nil, h.service.PutFavorite(c.Request.Context(), actor(c), c.Param("productId")))
+}
+
+func (h *MarketplaceController) deleteFavorite(c *gin.Context) {
+	respond(c, nil, h.service.DeleteFavorite(c.Request.Context(), actor(c), c.Param("productId")))
+}

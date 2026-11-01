@@ -50,7 +50,7 @@ func (s *Service) ReviewShop(ctx context.Context, actor model.Actor, id string, 
 		((in.Status == "rejected" || in.Status == "suspended") && !validText(in.Reason, 500)) {
 		return ErrInvalid
 	}
-	return s.store.Transaction(ctx, func(tx store.Store) error {
+	err := s.store.Transaction(ctx, func(tx store.Store) error {
 		shop, err := tx.Shop(ctx, id, true)
 		if err != nil {
 			return err
@@ -59,8 +59,22 @@ func (s *Service) ReviewShop(ctx context.Context, actor model.Actor, id string, 
 		if err = tx.SaveShop(ctx, &shop); err != nil {
 			return err
 		}
+		products, err := tx.ProductsByShop(ctx, shop.ID, model.ListOptions{Page: 1, PageSize: 100})
+		if err != nil {
+			return err
+		}
+		operation := "delete"
+		if shop.Status == "approved" {
+			operation = "index"
+		}
+		for _, product := range products.Items {
+			if err = searchEvent(ctx, tx, product.ID, operation); err != nil {
+				return err
+			}
+		}
 		return audit(ctx, tx, actor, "shop."+in.Status, shop.ID, in.Reason)
 	})
+	return err
 }
 
 // CreateCategory 由平台创建分类并记录审计。

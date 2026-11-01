@@ -44,6 +44,9 @@ func (s *Service) SaveProduct(ctx context.Context, a model.Actor, p model.Produc
 		if err = tx.SaveProduct(ctx, &p); err != nil {
 			return err
 		}
+		if err = searchEvent(ctx, tx, p.ID, "delete"); err != nil {
+			return err
+		}
 		return audit(ctx, tx, a, "product.submit", p.ID, p.Name)
 	})
 	return p, err
@@ -60,7 +63,7 @@ func (s *Service) ReviewProduct(ctx context.Context, actor model.Actor, id strin
 	if len([]rune(in.Reason)) > 500 || (in.Status == "rejected" && !validText(in.Reason, 500)) {
 		return ErrInvalid
 	}
-	return s.store.Transaction(ctx, func(tx store.Store) error {
+	err := s.store.Transaction(ctx, func(tx store.Store) error {
 		product, err := tx.Product(ctx, id, false)
 		if err != nil {
 			return err
@@ -80,8 +83,17 @@ func (s *Service) ReviewProduct(ctx context.Context, actor model.Actor, id strin
 		if err = tx.SaveProduct(ctx, &product); err != nil {
 			return err
 		}
+		if in.Status == "approved" {
+			err = searchEvent(ctx, tx, product.ID, "index")
+		} else {
+			err = searchEvent(ctx, tx, product.ID, "delete")
+		}
+		if err != nil {
+			return err
+		}
 		return audit(ctx, tx, actor, "product."+in.Status, product.ID, in.Reason)
 	})
+	return err
 }
 
 // AdjustStock 在锁定商家及商品后调整库存。

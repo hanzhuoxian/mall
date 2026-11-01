@@ -22,6 +22,7 @@ type Page[T any] struct {
 type ProductFilter struct {
 	OwnerID    string
 	Name       string
+	Keyword    string
 	Status     string
 	CategoryID string
 	Catalog    bool

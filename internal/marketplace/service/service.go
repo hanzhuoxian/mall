@@ -26,13 +26,24 @@ var (
 // Service 通过存储接口执行业务操作，不持有 HTTP 或数据库实现。
 type Service struct {
 	store          store.Store
+	search         SearchIndex
 	sandboxPayment bool
+}
+
+// SearchIndex indexes and queries public catalog documents.
+type SearchIndex interface {
+	Search(context.Context, string, model.ListOptions) (model.Page[model.Product], error)
+	Index(context.Context, model.Product) error
+	Delete(context.Context, string) error
 }
 
 // NewService 使用指定存储创建商城服务。
 func NewService(ds store.Store, sandboxPayment bool) *Service {
 	return &Service{store: ds, sandboxPayment: sandboxPayment}
 }
+
+// SetSearchIndex enables Elasticsearch backed catalog search.
+func (s *Service) SetSearchIndex(index SearchIndex) { s.search = index }
 
 // Close 释放商城存储资源。
 func (s *Service) Close() error { return s.store.Close() }
@@ -47,6 +58,10 @@ func audit(ctx context.Context, tx store.Store, actor model.Actor, action, targe
 		TargetID: target,
 		Detail:   detail,
 	})
+}
+
+func searchEvent(ctx context.Context, tx store.Store, productID, operation string) error {
+	return tx.CreateSearchOutbox(ctx, &model.SearchOutbox{Base: base(), ProductID: productID, Operation: operation})
 }
 
 func ownedShop(ctx context.Context, tx store.Store, actor model.Actor, id string) (model.Shop, error) {

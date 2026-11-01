@@ -16,7 +16,7 @@ func NewApp(basename string) *app.App {
 		"Mall Control Tool",
 		app.WithDescription(commandDesc),
 		app.WithNoConfig(),
-		app.WithCommands(newMigrateCmd(), newInitAdminCmd()),
+		app.WithCommands(newMigrateCmd(), newInitAdminCmd(), newReindexSearchCmd()),
 	)
 
 	return a

@@ -19,6 +19,7 @@ type Options struct {
 	LogOptions             *logger.Options                    `json:"log"             mapstructure:"log"`
 	TelemetryOptions       *pkgoptions.TelemetryOptions       `json:"otel"            mapstructure:"otel"`
 	SandboxPayment         bool                               `json:"sandbox-payment" mapstructure:"sandbox-payment"`
+	ElasticsearchURL       string                             `json:"elasticsearch-url" mapstructure:"elasticsearch-url"`
 }
 
 // NewOptions 返回带有各子系统默认值的 Options 实例。
@@ -44,6 +45,7 @@ func (o *Options) Flags() (nfs nflag.NamedFlagSets) {
 	o.MySQLOptions.AddFlags(nfs.FlagSet("mysql"))
 	nfs.FlagSet("commerce").
 		BoolVar(&o.SandboxPayment, "sandbox-payment", false, "Enable simulated payments for local development only")
+	nfs.FlagSet("commerce").StringVar(&o.ElasticsearchURL, "elasticsearch-url", "", "Elasticsearch URL for catalog full-text search; empty disables Elasticsearch")
 	o.InsecureServingOptions.AddFlags(nfs.FlagSet("insecure"))
 	o.UserServiceOptions.AddFlags(nfs.FlagSet("user-service"))
 	o.RedisOptions.AddFlags(nfs.FlagSet("redis"))

@@ -45,3 +45,16 @@ func (s *Service) PutCart(ctx context.Context, actor model.Actor, in model.CartI
 func (s *Service) DeleteCart(ctx context.Context, actor model.Actor, id string) error {
 	return s.store.DeleteCart(ctx, actor.ID, []string{id})
 }
+
+// PutFavorite adds an approved product to the current user's favorites.
+func (s *Service) PutFavorite(ctx context.Context, actor model.Actor, productID string) error {
+	if _, err := s.store.CatalogProduct(ctx, productID); err != nil {
+		return err
+	}
+	return s.store.PutFavorite(ctx, &model.Favorite{Base: base(), UserID: actor.ID, ProductID: productID})
+}
+
+// DeleteFavorite removes a product only from the current user's favorites.
+func (s *Service) DeleteFavorite(ctx context.Context, actor model.Actor, productID string) error {
+	return s.store.DeleteFavorite(ctx, actor.ID, productID)
+}

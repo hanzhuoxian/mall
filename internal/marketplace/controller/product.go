@@ -7,7 +7,11 @@ import (
 )
 
 func (h *MarketplaceController) catalog(c *gin.Context) {
-	data, err := h.service.Catalog(c.Request.Context(), c.Query("name"), c.Query("categoryId"), pagination(c))
+	keyword := c.Query("q")
+	if keyword == "" {
+		keyword = c.Query("name")
+	}
+	data, err := h.service.Catalog(c.Request.Context(), keyword, c.Query("categoryId"), pagination(c))
 	respond(c, data, err)
 }
 

@@ -2,8 +2,10 @@ package mysql
 
 import (
 	"context"
+	"strings"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/hanzhuoxian/mall/internal/marketplace/model"
 )
@@ -64,6 +66,17 @@ func (s *datastore) ListProducts(
 	if filter.Name != "" {
 		q = q.Where("name LIKE ?", "%"+filter.Name+"%")
 	}
+	if filter.Keyword != "" {
+		keywords := strings.Fields(strings.TrimSpace(filter.Keyword))
+		for _, keyword := range keywords {
+			pattern := "%" + keyword + "%"
+			q = q.Where("(name LIKE ? OR description LIKE ?)", pattern, pattern)
+		}
+		// Match all tokens; order name matches ahead of description-only matches.
+		q = q.Clauses(clause.OrderBy{Expression: clause.Expr{
+			SQL: "CASE WHEN name LIKE ? THEN 0 ELSE 1 END", Vars: []any{"%" + strings.TrimSpace(filter.Keyword) + "%"},
+		}})
+	}
 	if filter.Status != "" {
 		q = q.Where("status = ?", filter.Status)
 	}
@@ -71,6 +84,28 @@ func (s *datastore) ListProducts(
 		q = q.Where("category_id = ?", filter.CategoryID)
 	}
 	return list[model.Product](q, opts)
+}
+
+func (s *datastore) ProductsByShop(ctx context.Context, shopID string, opts model.ListOptions) (model.Page[model.Product], error) {
+	return list[model.Product](s.db.WithContext(ctx).Model(&model.Product{}).Where("shop_id = ?", shopID), opts)
+}
+
+func (s *datastore) CreateSearchOutbox(ctx context.Context, event *model.SearchOutbox) error {
+	return normalizeError(s.db.WithContext(ctx).Create(event).Error)
+}
+
+func (s *datastore) PendingSearchOutbox(ctx context.Context, limit int) ([]model.SearchOutbox, error) {
+	var events []model.SearchOutbox
+	err := s.db.WithContext(ctx).Order("created_at ASC, id ASC").Limit(limit).Find(&events).Error
+	return events, normalizeError(err)
+}
+
+func (s *datastore) DeleteSearchOutbox(ctx context.Context, id string) error {
+	return normalizeError(s.db.WithContext(ctx).Delete(&model.SearchOutbox{}, "id = ?", id).Error)
+}
+
+func (s *datastore) IncrementSearchOutboxAttempts(ctx context.Context, id string) error {
+	return normalizeError(s.db.WithContext(ctx).Model(&model.SearchOutbox{}).Where("id = ?", id).UpdateColumn("attempts", gorm.Expr("attempts + 1")).Error)
 }
 
 func (s *datastore) SaveProduct(ctx context.Context, product *model.Product) error {

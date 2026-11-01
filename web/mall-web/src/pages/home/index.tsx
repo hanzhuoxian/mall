@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { marketplace, type Category, type Product } from '../../services/marketplace';
 
 const money = (cents: number) => `¥${(cents / 100).toFixed(2)}`;
-const initialSearch = () => typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('name') ?? '';
+const initialSearch = () => typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('q') ?? new URLSearchParams(window.location.search).get('name') ?? '';
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -16,6 +16,17 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
+
+  const search = (value: string) => {
+    const keyword = value.trim();
+    setCurrent(1);
+    setName(keyword);
+    const params = new URLSearchParams(window.location.search);
+    if (keyword) params.set('q', keyword); else params.delete('q');
+    params.delete('name');
+    const query = params.toString();
+    window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+  };
 
   useEffect(() => { marketplace.categories({ pageSize: 100 }).then((page) => setCategories(page.items)).catch(() => setError('分类加载失败')); }, []);
   useEffect(() => {
@@ -32,8 +43,8 @@ export default function HomePage() {
   return <main className="page-wrap">
     <section className="hero"><div><div className="eyebrow">Thoughtfully picked</div><h1>把喜欢的日常，<br />过得更好一点。</h1><p>发现值得带回家的设计与好物</p></div><div className="hero-mark" aria-hidden="true">好<br />物</div></section>
     <section className="catalog-tools" aria-label="商品筛选">
-      <Input aria-label="搜索商品" placeholder="搜索商品名称" value={draft} onChange={(event) => setDraft(event.target.value)} onPressEnter={() => { setCurrent(1); setName(draft.trim()); }} />
-      <Button type="primary" onClick={() => { setCurrent(1); setName(draft.trim()); }}>搜索</Button>
+      <Input aria-label="搜索商品" placeholder="搜索商品名称或描述，支持多个关键词" value={draft} onChange={(event) => setDraft(event.target.value)} onPressEnter={() => search(draft)} />
+      <Button type="primary" onClick={() => search(draft)}>搜索</Button>
     </section>
     <div className="category-row"><Tag color={!categoryId ? 'green' : undefined} onClick={() => { setCategoryId(''); setCurrent(1); }}>全部好物</Tag>
       {categories.map((category) => <Tag key={category.id} color={categoryId === category.id ? 'green' : undefined} onClick={() => { setCategoryId(category.id); setCurrent(1); }}>{category.name}</Tag>)}

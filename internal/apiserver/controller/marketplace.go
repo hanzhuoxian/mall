@@ -7,6 +7,7 @@ import (
 	"github.com/hanzhuoxian/mall/internal/apiserver/grpcclient"
 	marketcontroller "github.com/hanzhuoxian/mall/internal/marketplace/controller"
 	"github.com/hanzhuoxian/mall/internal/marketplace/model"
+	"github.com/hanzhuoxian/mall/internal/marketplace/search"
 	"github.com/hanzhuoxian/mall/internal/marketplace/service"
 	"github.com/hanzhuoxian/mall/internal/marketplace/store/mysql"
 	"github.com/hanzhuoxian/mall/internal/pkg/admin"
@@ -20,7 +21,12 @@ func NewMarketplaceService(cfg *config.Config) (*service.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	return service.NewService(mysql.NewStore(db), cfg.SandboxPayment), nil
+	svc := service.NewService(mysql.NewStore(db), cfg.SandboxPayment)
+	if cfg.ElasticsearchURL != "" {
+		index := search.New(cfg.ElasticsearchURL)
+		svc.SetSearchIndex(index)
+	}
+	return svc, nil
 }
 
 // NewMarketplaceController 为商城控制器注入用户身份查询能力。

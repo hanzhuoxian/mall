@@ -7,6 +7,7 @@ export type Product = {
   image: string; status: string; price: number; stock: number;
 };
 export type CartItem = { id: string; productId: string; quantity: number; product?: Product };
+export type Favorite = { id: string; productId: string; product?: Product };
 export type Address = { id: string; recipient: string; phone: string; detail: string };
 export type OrderItem = { id: string; name: string; price: number; quantity: number };
 export type Order = {
@@ -35,7 +36,7 @@ async function allPages<T>(path: string): Promise<Page<T>> {
 }
 
 export const marketplace = {
-  catalog: (params: { name?: string; categoryId?: string; current?: number; pageSize?: number } = {}) =>
+  catalog: (params: { name?: string; q?: string; categoryId?: string; current?: number; pageSize?: number } = {}) =>
     api<Page<Product>>(`/v1/market/catalog?${query(params)}`, { auth: false }),
   categories: (params: { current?: number; pageSize?: number } = {}) =>
     api<Page<Category>>(`/v1/market/categories?${query(params)}`, { auth: false }),
@@ -44,6 +45,9 @@ export const marketplace = {
   cart: () => allPages<CartItem>('/v1/market/cart'),
   updateCart: (item: CartItem) => marketplace.putCart(item.productId, item.quantity),
   deleteCart: (id: string) => api<null>(`/v1/market/cart/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  favorites: () => allPages<Favorite>('/v1/market/favorites'),
+  putFavorite: (productId: string) => api<null>(`/v1/market/favorites/${encodeURIComponent(productId)}`, { method: 'PUT' }),
+  deleteFavorite: (productId: string) => api<null>(`/v1/market/favorites/${encodeURIComponent(productId)}`, { method: 'DELETE' }),
   addresses: () => allPages<Address>('/v1/market/addresses'),
   createAddress: (input: Omit<Address, 'id'>) => api<Address>('/v1/market/addresses', { method: 'POST', body: JSON.stringify(input) }),
   deleteAddress: (id: string) => api<null>(`/v1/market/addresses/${encodeURIComponent(id)}`, { method: 'DELETE' }),

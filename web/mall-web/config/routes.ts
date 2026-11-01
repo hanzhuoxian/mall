@@ -3,6 +3,7 @@ export default [{
     { path: '/', component: '@/pages/home' },
     { path: '/product/:id', component: '@/pages/product/detail' },
     { path: '/cart', component: '@/pages/cart' },
+    { path: '/favorites', component: '@/pages/favorites' },
     { path: '/checkout', component: '@/pages/checkout' },
     { path: '/orders', component: '@/pages/orders' },
     { path: '/account/addresses', component: '@/pages/account/addresses' },

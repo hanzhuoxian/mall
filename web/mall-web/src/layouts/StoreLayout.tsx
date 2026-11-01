@@ -18,7 +18,7 @@ export default function StoreLayout() {
     <div className="announcement">为日常挑选好物 · 安心逛，慢慢选</div>
     <header className="store-header"><a className="brand" href="/">MALL<span>.</span></a>
       <form className="store-search" action="/" method="get"><input aria-label="全站搜索" name="name" placeholder="搜索你喜欢的好物" /></form>
-      <nav><a href="/">发现好物</a><a href="/orders">我的订单</a></nav>
+      <nav><a href="/">发现好物</a><a href="/favorites">我的收藏</a><a href="/orders">我的订单</a></nav>
       <div className="store-actions"><a aria-label="购物车" href="/cart"><ShoppingCartOutlined /></a><a aria-label="账户" href={signedIn ? '/account/addresses' : '/user/login'}><UserOutlined /></a>{signedIn && <Button type="text" size="small" aria-label="退出登录" onClick={() => void signOut()}>退出登录</Button>}</div>
     </header>
     <Outlet />

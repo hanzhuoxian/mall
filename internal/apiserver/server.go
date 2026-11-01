@@ -64,9 +64,15 @@ func (a *apiserver) PrepareRun() *preparedApiServer {
 			}
 		}
 	}()
+	searchDone := make(chan struct{})
+	go func() {
+		defer close(searchDone)
+		a.marketplace.RunSearchSync(ctx)
+	}()
 	a.gs.AddShutdownCallback(shutdown.ShutdownFunc(func(s string) error {
 		cancel()
 		<-done
+		<-searchDone
 		a.apiServer.Close()
 		return a.marketplace.Close()
 	}))

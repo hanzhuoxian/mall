@@ -11,7 +11,7 @@ Go / Gin / gRPC / MySQL / Redis + React / Umi / Ant Design。
 需要 Go 1.26.3、Node.js 22 或更新版本、MySQL 和 Redis。使用仓库已有依赖版本。
 
 ```sh
-docker compose -f deployments/docker-compose.dev.yaml up -d mysql redis
+docker compose -f deployments/docker-compose.dev.yaml up -d mysql redis elasticsearch
 ```
 
 新 MySQL 数据卷会自动创建 `mall` 和 `mall_user` 数据库。已有数据卷不执行初始化 SQL，需要自行创建缺失的数据库；不要删除现有数据卷。
@@ -38,7 +38,13 @@ go run ./cmd/mall-user-server
 ```sh
 # 临时随机密钥只用于本次本地运行；重启后旧令牌失效。
 # 正式环境从密钥管理系统提供固定的 32 字节以上密钥。
-go run ./cmd/mall-api-server --server.jwt-secret "$(openssl rand -hex 32)" --sandbox-payment
+go run ./cmd/mall-api-server --server.jwt-secret "$(openssl rand -hex 32)" --sandbox-payment --elasticsearch-url http://localhost:9200
+```
+
+首次接入 Elasticsearch 或需要修复索引时，执行全量重建（命令会先清空 `mall-products` 索引，再从 MySQL 回填当前在售商品）：
+
+```sh
+go run ./cmd/mallctl reindex-search --elasticsearch-url http://localhost:9200
 ```
 
 ```sh
