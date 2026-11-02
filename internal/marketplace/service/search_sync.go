@@ -3,6 +3,13 @@ package service
 import (
 	"context"
 	"time"
+
+	"github.com/hanzhuoxian/mall/internal/marketplace/model"
+)
+
+const (
+	searchSyncInterval  = time.Second
+	searchSyncBatchSize = model.MaxPageSize
 )
 
 // RunSearchSync continuously delivers durable outbox events to Elasticsearch.
@@ -10,7 +17,7 @@ func (s *Service) RunSearchSync(ctx context.Context) {
 	if s.search == nil {
 		return
 	}
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(searchSyncInterval)
 	defer ticker.Stop()
 	for {
 		if err := s.syncSearchBatch(ctx); err != nil && ctx.Err() == nil { /* next tick retries */
@@ -24,7 +31,7 @@ func (s *Service) RunSearchSync(ctx context.Context) {
 }
 
 func (s *Service) syncSearchBatch(ctx context.Context) error {
-	events, err := s.store.PendingSearchOutbox(ctx, 100)
+	events, err := s.store.PendingSearchOutbox(ctx, searchSyncBatchSize)
 	if err != nil {
 		return err
 	}
@@ -37,7 +44,7 @@ func (s *Service) syncSearchBatch(ctx context.Context) error {
 			shop, shopErr := s.store.Shop(ctx, product.ShopID, false)
 			if shopErr != nil {
 				syncErr = shopErr
-			} else if product.Status == "approved" && shop.Status == "approved" {
+			} else if product.Status == model.ProductStatusApproved && shop.Status == model.ShopStatusApproved {
 				syncErr = s.search.Index(ctx, product)
 			} else {
 				syncErr = s.search.Delete(ctx, product.ID)

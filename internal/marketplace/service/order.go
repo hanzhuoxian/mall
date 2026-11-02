@@ -11,36 +11,36 @@ import (
 
 func transition(o model.Order, action string, buyer, seller, platform, sandbox bool) (string, error) {
 	switch action {
-	case "pay":
+	case model.OrderActionPay:
 		if !sandbox {
 			return "", errors.New("真实支付尚未配置；仅显式启用沙箱支付后可演示")
 		}
-		if buyer && o.Status == "pending" && time.Now().Before(o.ExpiresAt) {
-			return "paid", nil
+		if buyer && o.Status == model.OrderStatusPending && time.Now().Before(o.ExpiresAt) {
+			return model.OrderStatusPaid, nil
 		}
-	case "cancel":
-		if buyer && o.Status == "pending" {
+	case model.OrderActionCancel:
+		if buyer && o.Status == model.OrderStatusPending {
 			return model.OrderCanceled, nil
 		}
-	case "ship":
-		if seller && o.Status == "paid" {
-			return "shipped", nil
+	case model.OrderActionShip:
+		if seller && o.Status == model.OrderStatusPaid {
+			return model.OrderStatusShipped, nil
 		}
-	case "receive":
-		if buyer && o.Status == "shipped" {
-			return "completed", nil
+	case model.OrderActionReceive:
+		if buyer && o.Status == model.OrderStatusShipped {
+			return model.OrderStatusCompleted, nil
 		}
-	case "refund":
-		if buyer && (o.Status == "paid" || o.Status == "shipped" || o.Status == "completed") {
-			return "refunding", nil
+	case model.OrderActionRefund:
+		if buyer && (o.Status == model.OrderStatusPaid || o.Status == model.OrderStatusShipped || o.Status == model.OrderStatusCompleted) {
+			return model.OrderStatusRefunding, nil
 		}
-	case "approve-refund":
-		if sandbox && (seller || platform) && o.Status == "refunding" {
-			return "refunded", nil
+	case model.OrderActionApproveRefund:
+		if sandbox && (seller || platform) && o.Status == model.OrderStatusRefunding {
+			return model.OrderStatusRefunded, nil
 		}
-	case "reject-refund":
-		if (seller || platform) && o.Status == "refunding" &&
-			(o.RefundFrom == "paid" || o.RefundFrom == "shipped" || o.RefundFrom == "completed") {
+	case model.OrderActionRejectRefund:
+		if (seller || platform) && o.Status == model.OrderStatusRefunding &&
+			(o.RefundFrom == model.OrderStatusPaid || o.RefundFrom == model.OrderStatusShipped || o.RefundFrom == model.OrderStatusCompleted) {
 			return o.RefundFrom, nil
 		}
 	}
@@ -61,7 +61,7 @@ func restoreStock(ctx context.Context, tx store.Store, o model.Order) error {
 
 // ActOrder 根据操作人的身份及当前订单状态执行订单操作。
 func (s *Service) ActOrder(ctx context.Context, a model.Actor, id string, in model.OrderAction) error {
-	if (in.Action == "pay" || in.Action == "approve-refund") && !s.sandboxPayment {
+	if (in.Action == model.OrderActionPay || in.Action == model.OrderActionApproveRefund) && !s.sandboxPayment {
 		return ErrPaymentDisabled
 	}
 	return s.store.Transaction(ctx, func(tx store.Store) error {
@@ -73,7 +73,7 @@ func (s *Service) ActOrder(ctx context.Context, a model.Actor, id string, in mod
 		if err != nil {
 			return err
 		}
-		buyer, seller := o.UserID == a.ID, shop.OwnerID == a.ID && shop.Status == "approved"
+		buyer, seller := o.UserID == a.ID, shop.OwnerID == a.ID && shop.Status == model.ShopStatusApproved
 		if !buyer && !seller && !a.Admin {
 			return ErrForbidden
 		}
@@ -82,24 +82,24 @@ func (s *Service) ActOrder(ctx context.Context, a model.Actor, id string, in mod
 			return err
 		}
 		switch in.Action {
-		case "ship":
-			if !validText(in.Carrier, 100) || !validText(in.Tracking, 100) {
+		case model.OrderActionShip:
+			if !validText(in.Carrier, model.MaxCarrierLength) || !validText(in.Tracking, model.MaxTrackingLength) {
 				return ErrInvalid
 			}
 			o.Carrier = in.Carrier
 			o.Tracking = in.Tracking
-		case "refund":
-			if !validText(in.Reason, 500) {
+		case model.OrderActionRefund:
+			if !validText(in.Reason, model.MaxReasonLength) {
 				return ErrInvalid
 			}
 			o.RefundFrom = o.Status
 			o.RefundReason = in.Reason
-		case "reject-refund":
-			if !validText(in.Reason, 500) {
+		case model.OrderActionRejectRefund:
+			if !validText(in.Reason, model.MaxReasonLength) {
 				return ErrInvalid
 			}
 		}
-		if next == model.OrderCanceled || (next == "refunded" && o.RefundFrom == "paid") {
+		if next == model.OrderCanceled || (next == model.OrderStatusRefunded && o.RefundFrom == model.OrderStatusPaid) {
 			if err = restoreStock(ctx, tx, o); err != nil {
 				return err
 			}
@@ -114,7 +114,7 @@ func (s *Service) ActOrder(ctx context.Context, a model.Actor, id string, in mod
 
 // ExpireOrders is safe to invoke concurrently: each order is checked under a row lock.
 func (s *Service) ExpireOrders(ctx context.Context) error {
-	ids, err := s.store.ExpiredOrderIDs(ctx, time.Now(), 100)
+	ids, err := s.store.ExpiredOrderIDs(ctx, time.Now(), model.MaxPageSize)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func (s *Service) ExpireOrders(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			if o.Status != "pending" {
+			if o.Status != model.OrderStatusPending {
 				return nil
 			}
 			if err := restoreStock(ctx, tx, o); err != nil {
@@ -133,7 +133,7 @@ func (s *Service) ExpireOrders(ctx context.Context) error {
 			if err := tx.SetOrderStatus(ctx, o.ID, model.OrderCanceled); err != nil {
 				return err
 			}
-			return audit(ctx, tx, model.Actor{ID: "system"}, "order.expire", id, "")
+			return audit(ctx, tx, model.Actor{ID: defaultActorID}, "order.expire", id, "")
 		}); err != nil {
 			return err
 		}

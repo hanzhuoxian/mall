@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { marketplace, type Favorite } from '../../services/marketplace';
 import { ACCESS_TOKEN, loginUrl } from '../user/service';
 
-const money = (cents: number) => `¥${(cents / 100).toFixed(2)}`;
+const centsPerYuan = 100;
+const money = (cents: number) => `¥${(cents / centsPerYuan).toFixed(2)}`;
 
 export default function FavoritesPage() {
   const [items, setItems] = useState<Favorite[]>([]);

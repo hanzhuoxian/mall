@@ -91,7 +91,7 @@ func (s *datastore) ExpiredOrderIDs(ctx context.Context, now time.Time, limit in
 	ids := []string{}
 	err := s.db.WithContext(ctx).
 		Model(&model.Order{}).
-		Where("status = ? AND expires_at <= ?", "pending", now).
+		Where("status = ? AND expires_at <= ?", model.OrderStatusPending, now).
 		Limit(limit).
 		Pluck("id", &ids).
 		Error
@@ -108,7 +108,7 @@ func (s *datastore) Summary(ctx context.Context, filter model.OrderFilter) (mode
 		Commission int64
 	}
 	err := s.orderScope(ctx, filter).
-		Where("status IN ?", []string{"paid", "shipped", "completed"}).
+		Where("status IN ?", []string{model.OrderStatusPaid, model.OrderStatusShipped, model.OrderStatusCompleted}).
 		Select("COALESCE(SUM(amount),0) AS gmv, COALESCE(SUM(commission),0) AS commission").
 		Scan(&sums).
 		Error
@@ -118,7 +118,7 @@ func (s *datastore) Summary(ctx context.Context, filter model.OrderFilter) (mode
 	summary.GMV = sums.GMV
 	summary.Commission = sums.Commission
 	err = s.orderScope(ctx, filter).
-		Where("status = ?", "completed").
+		Where("status = ?", model.OrderStatusCompleted).
 		Select("COALESCE(SUM(amount - commission),0)").
 		Scan(&summary.Payable).
 		Error

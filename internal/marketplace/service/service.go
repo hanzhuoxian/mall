@@ -5,11 +5,21 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/hanzhuoxian/mall/internal/marketplace/model"
 	"github.com/hanzhuoxian/mall/internal/marketplace/store"
+)
+
+const (
+	maxProductDescriptionLength = 10_000
+	maxProductImageLength       = 1_000
+	maxPageNumber               = 100_000
+	defaultPageSize             = 20
+	checkoutOrderLifetime       = 30 * time.Minute
+	defaultActorID              = "system"
 )
 
 var (
@@ -80,23 +90,23 @@ func validText(value string, maxLength int) bool {
 }
 
 func validProduct(product model.Product) bool {
-	return validText(product.Name, 200) &&
-		len([]rune(product.Description)) <= 10000 &&
-		len(product.Image) <= 1000 &&
+	return validText(product.Name, model.MaxProductNameLength) &&
+		len([]rune(product.Description)) <= maxProductDescriptionLength &&
+		len(product.Image) <= maxProductImageLength &&
 		(product.Image == "" || strings.HasPrefix(product.Image, "https://")) &&
-		product.Price > 0 && product.Price <= 100000000 &&
-		product.Stock >= 0 && product.Stock <= 100000000
+		product.Price > 0 && product.Price <= model.MaxProductPriceCents &&
+		product.Stock >= 0 && product.Stock <= model.MaxProductStock
 }
 
 func normalizePage(opts model.ListOptions) model.ListOptions {
 	if opts.Page < 1 {
 		opts.Page = 1
 	}
-	if opts.Page > 100000 {
-		opts.Page = 100000
+	if opts.Page > maxPageNumber {
+		opts.Page = maxPageNumber
 	}
-	if opts.PageSize < 1 || opts.PageSize > 100 {
-		opts.PageSize = 20
+	if opts.PageSize < 1 || opts.PageSize > model.MaxPageSize {
+		opts.PageSize = defaultPageSize
 	}
 	return opts
 }

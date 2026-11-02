@@ -71,8 +71,8 @@ func (s *datastore) DeleteCart(ctx context.Context, userID string, ids []string)
 func (s *datastore) ListFavorites(ctx context.Context, userID string, opts model.ListOptions) (model.Page[model.Favorite], error) {
 	db := s.db.WithContext(ctx)
 	query := db.Model(&model.Favorite{}).Preload("Product").Where("user_id = ? AND product_id IN (?)", userID,
-		db.Model(&model.Product{}).Select("id").Where("status = ? AND shop_id IN (?)", "approved",
-			db.Model(&model.Shop{}).Select("id").Where("status = ?", "approved")))
+		db.Model(&model.Product{}).Select("id").Where("status = ? AND shop_id IN (?)", model.ProductStatusApproved,
+			db.Model(&model.Shop{}).Select("id").Where("status = ?", model.ShopStatusApproved)))
 	return list[model.Favorite](query, opts)
 }
 

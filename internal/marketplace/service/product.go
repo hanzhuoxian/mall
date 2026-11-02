@@ -15,7 +15,7 @@ func (s *Service) SaveProduct(ctx context.Context, a model.Actor, p model.Produc
 		if err != nil {
 			return err
 		}
-		if shop.Status != "approved" {
+		if shop.Status != model.ShopStatusApproved {
 			return ErrForbidden
 		}
 		if !validProduct(p) {
@@ -39,12 +39,12 @@ func (s *Service) SaveProduct(ctx context.Context, a model.Actor, p model.Produc
 		} else {
 			p.Base = base()
 		}
-		p.Status = "pending"
+		p.Status = model.ProductStatusPending
 		p.Reason = ""
 		if err = tx.SaveProduct(ctx, &p); err != nil {
 			return err
 		}
-		if err = searchEvent(ctx, tx, p.ID, "delete"); err != nil {
+		if err = searchEvent(ctx, tx, p.ID, model.SearchOperationDelete); err != nil {
 			return err
 		}
 		return audit(ctx, tx, a, "product.submit", p.ID, p.Name)
@@ -54,13 +54,13 @@ func (s *Service) SaveProduct(ctx context.Context, a model.Actor, p model.Produc
 
 // ReviewProduct 审核或下架商品，普通商家仅能下架自己的商品。
 func (s *Service) ReviewProduct(ctx context.Context, actor model.Actor, id string, in model.ProductReview) error {
-	if in.Status != "approved" && in.Status != "rejected" && in.Status != "offline" {
+	if in.Status != model.ProductStatusApproved && in.Status != model.ProductStatusRejected && in.Status != model.ProductStatusOffline {
 		return ErrInvalid
 	}
-	if !actor.Admin && in.Status != "offline" {
+	if !actor.Admin && in.Status != model.ProductStatusOffline {
 		return ErrForbidden
 	}
-	if len([]rune(in.Reason)) > 500 || (in.Status == "rejected" && !validText(in.Reason, 500)) {
+	if len([]rune(in.Reason)) > model.MaxReasonLength || (in.Status == model.ProductStatusRejected && !validText(in.Reason, model.MaxReasonLength)) {
 		return ErrInvalid
 	}
 	err := s.store.Transaction(ctx, func(tx store.Store) error {
@@ -76,17 +76,17 @@ func (s *Service) ReviewProduct(ctx context.Context, actor model.Actor, id strin
 		if err != nil {
 			return err
 		}
-		if in.Status == "approved" && (shop.Status != "approved" || product.Status != "pending") {
+		if in.Status == model.ProductStatusApproved && (shop.Status != model.ShopStatusApproved || product.Status != model.ProductStatusPending) {
 			return ErrInvalid
 		}
 		product.Status, product.Reason = in.Status, in.Reason
 		if err = tx.SaveProduct(ctx, &product); err != nil {
 			return err
 		}
-		if in.Status == "approved" {
-			err = searchEvent(ctx, tx, product.ID, "index")
+		if in.Status == model.ProductStatusApproved {
+			err = searchEvent(ctx, tx, product.ID, model.SearchOperationIndex)
 		} else {
-			err = searchEvent(ctx, tx, product.ID, "delete")
+			err = searchEvent(ctx, tx, product.ID, model.SearchOperationDelete)
 		}
 		if err != nil {
 			return err
@@ -98,7 +98,7 @@ func (s *Service) ReviewProduct(ctx context.Context, actor model.Actor, id strin
 
 // AdjustStock 在锁定商家及商品后调整库存。
 func (s *Service) AdjustStock(ctx context.Context, actor model.Actor, id string, delta int64) error {
-	if delta == 0 || delta > 1000000 || delta < -1000000 {
+	if delta == 0 || delta > model.MaxStockAdjustment || delta < -model.MaxStockAdjustment {
 		return ErrInvalid
 	}
 	return s.store.Transaction(ctx, func(tx store.Store) error {
@@ -113,7 +113,7 @@ func (s *Service) AdjustStock(ctx context.Context, actor model.Actor, id string,
 		if err != nil {
 			return err
 		}
-		if product.Stock+delta < 0 || product.Stock+delta > 100000000 {
+		if product.Stock+delta < 0 || product.Stock+delta > model.MaxProductStock {
 			return ErrInvalid
 		}
 		if err = tx.AdjustStock(ctx, product.ID, delta); err != nil {

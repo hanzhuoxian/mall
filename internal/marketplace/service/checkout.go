@@ -27,7 +27,7 @@ func fingerprint(in model.CheckoutInput) string {
 // Checkout 按商家拆单，在同一事务内预留库存并处理幂等重试。
 func (s *Service) Checkout(ctx context.Context, a model.Actor, in model.CheckoutInput) ([]model.Order, error) {
 	orders := []model.Order{}
-	if !validText(in.RequestKey, 100) || len(in.CartIDs) == 0 || len(in.CartIDs) > 100 {
+	if !validText(in.RequestKey, model.MaxRequestKeyLength) || len(in.CartIDs) == 0 || len(in.CartIDs) > model.MaxCheckoutItems {
 		return nil, ErrInvalid
 	}
 	seen := map[string]bool{}
@@ -92,7 +92,7 @@ func (s *Service) Checkout(ctx context.Context, a model.Actor, in model.Checkout
 			if err != nil {
 				return err
 			}
-			if shop.Status != "approved" {
+			if shop.Status != model.ShopStatusApproved {
 				return ErrStock
 			}
 			shops[id] = shop
@@ -103,7 +103,7 @@ func (s *Service) Checkout(ctx context.Context, a model.Actor, in model.Checkout
 			if err != nil {
 				return err
 			}
-			if p.Status != "approved" || p.Stock < c.Quantity || c.Quantity < 1 || c.Quantity > 999 {
+			if p.Status != model.ProductStatusApproved || p.Stock < c.Quantity || c.Quantity < 1 || c.Quantity > model.MaxCartQuantity {
 				return ErrStock
 			}
 			o := groups[p.ShopID]
@@ -113,11 +113,11 @@ func (s *Service) Checkout(ctx context.Context, a model.Actor, in model.Checkout
 					CheckoutID: batch.ID,
 					UserID:     a.ID,
 					ShopID:     p.ShopID,
-					Status:     "pending",
+					Status:     model.OrderStatusPending,
 					Recipient:  address.Recipient,
 					Phone:      address.Phone,
 					Address:    address.Detail,
-					ExpiresAt:  time.Now().Add(30 * time.Minute),
+					ExpiresAt:  time.Now().Add(checkoutOrderLifetime),
 				}
 				groups[p.ShopID] = o
 			}
@@ -136,7 +136,7 @@ func (s *Service) Checkout(ctx context.Context, a model.Actor, in model.Checkout
 		}
 		for _, id := range shopIDs {
 			o := groups[id]
-			o.Commission = o.Amount * shops[id].CommissionBPS / 10000
+			o.Commission = o.Amount * shops[id].CommissionBPS / model.CommissionBasisPoints
 			if err := tx.CreateOrder(ctx, o); err != nil {
 				return err
 			}

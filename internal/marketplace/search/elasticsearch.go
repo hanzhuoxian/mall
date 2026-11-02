@@ -14,15 +14,33 @@ import (
 	"github.com/hanzhuoxian/mall/internal/marketplace/model"
 )
 
-const indexName = "mall-products"
+const (
+	indexName               = "mall-products"
+	indexRequestTimeout     = 2 * time.Second
+	indexBatchSize          = model.MaxPageSize
+	productNameField        = "name"
+	productDescriptionField = "description"
+	productCategoryField    = "categoryId"
+	productShopField        = "shopId"
+	textAnalyzerName        = "mall_text"
+)
 
 type Elasticsearch struct {
 	endpoint string
 	client   *http.Client
 }
 
+func productDocument(product model.Product) map[string]any {
+	return map[string]any{
+		productNameField:        product.Name,
+		productDescriptionField: product.Description,
+		productCategoryField:    product.CategoryID,
+		productShopField:        product.ShopID,
+	}
+}
+
 func New(endpoint string) *Elasticsearch {
-	return &Elasticsearch{endpoint: strings.TrimRight(endpoint, "/"), client: &http.Client{Timeout: 2 * time.Second}}
+	return &Elasticsearch{endpoint: strings.TrimRight(endpoint, "/"), client: &http.Client{Timeout: indexRequestTimeout}}
 }
 
 func (e *Elasticsearch) ensureReady(ctx context.Context) error {
@@ -44,10 +62,10 @@ func (e *Elasticsearch) ensureReady(ctx context.Context) error {
 // EnsureIndex creates the index with a Chinese analyzer when it does not exist.
 func (e *Elasticsearch) EnsureIndex(ctx context.Context) error {
 	resp, err := e.request(ctx, http.MethodPut, "/"+indexName, map[string]any{
-		"settings": map[string]any{"analysis": map[string]any{"analyzer": map[string]any{"mall_text": map[string]any{"type": "custom", "tokenizer": "standard", "filter": []string{"lowercase", "cjk_width", "cjk_bigram"}}}}},
+		"settings": map[string]any{"analysis": map[string]any{"analyzer": map[string]any{textAnalyzerName: map[string]any{"type": "custom", "tokenizer": "standard", "filter": []string{"lowercase", "cjk_width", "cjk_bigram"}}}}},
 		"mappings": map[string]any{"properties": map[string]any{
-			"name": map[string]any{"type": "text", "analyzer": "mall_text"}, "description": map[string]any{"type": "text", "analyzer": "mall_text"},
-			"categoryId": map[string]any{"type": "keyword"}, "shopId": map[string]any{"type": "keyword"},
+			productNameField: map[string]any{"type": "text", "analyzer": textAnalyzerName}, productDescriptionField: map[string]any{"type": "text", "analyzer": textAnalyzerName},
+			productCategoryField: map[string]any{"type": "keyword"}, productShopField: map[string]any{"type": "keyword"},
 		}},
 	})
 	if err != nil {
@@ -85,7 +103,7 @@ func (e *Elasticsearch) Index(ctx context.Context, p model.Product) error {
 	if err := e.ensureReady(ctx); err != nil {
 		return err
 	}
-	body := map[string]any{"name": p.Name, "description": p.Description, "categoryId": p.CategoryID, "shopId": p.ShopID}
+	body := productDocument(p)
 	resp, err := e.request(ctx, http.MethodPut, "/"+indexName+"/_doc/"+url.PathEscape(p.ID)+"?refresh=wait_for", body)
 	if err != nil {
 		return err
@@ -124,12 +142,12 @@ func (e *Elasticsearch) Reindex(ctx context.Context, load func(context.Context, 
 	}
 	resp.Body.Close()
 	for pageNumber := 1; ; pageNumber++ {
-		page, err := load(ctx, model.ListOptions{Page: pageNumber, PageSize: 100})
+		page, err := load(ctx, model.ListOptions{Page: pageNumber, PageSize: indexBatchSize})
 		if err != nil {
 			return err
 		}
 		for _, product := range page.Items {
-			body := map[string]any{"name": product.Name, "description": product.Description, "categoryId": product.CategoryID, "shopId": product.ShopID}
+			body := productDocument(product)
 			resp, err = e.request(ctx, http.MethodPut, "/"+indexName+"/_doc/"+url.PathEscape(product.ID), body)
 			if err != nil {
 				return err
@@ -140,7 +158,7 @@ func (e *Elasticsearch) Reindex(ctx context.Context, load func(context.Context, 
 			}
 			resp.Body.Close()
 		}
-		if int64(pageNumber*100) >= page.Total || len(page.Items) == 0 {
+		if int64(pageNumber*indexBatchSize) >= page.Total || len(page.Items) == 0 {
 			break
 		}
 	}
@@ -159,7 +177,7 @@ func (e *Elasticsearch) Search(ctx context.Context, keyword string, opts model.L
 	if err := e.ensureReady(ctx); err != nil {
 		return model.Page[model.Product]{}, err
 	}
-	query := map[string]any{"from": (opts.Page - 1) * opts.PageSize, "size": opts.PageSize, "query": map[string]any{"multi_match": map[string]any{"query": keyword, "fields": []string{"name^3", "description"}, "operator": "and", "type": "best_fields"}}}
+	query := map[string]any{"from": (opts.Page - 1) * opts.PageSize, "size": opts.PageSize, "query": map[string]any{"multi_match": map[string]any{"query": keyword, "fields": []string{productNameField + "^3", productDescriptionField}, "operator": "and", "type": "best_fields"}}}
 	resp, err := e.request(ctx, http.MethodPost, "/"+indexName+"/_search", query)
 	if err != nil {
 		return model.Page[model.Product]{}, err

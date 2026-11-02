@@ -10,6 +10,14 @@ import (
 	"github.com/hanzhuoxian/mall/internal/marketplace/model"
 )
 
+const (
+	productCatalogStatusColumn     = "status"
+	productCatalogShopColumn       = "shop_id"
+	productCatalogIDColumn         = "id"
+	productSearchNameColumn        = "name"
+	productSearchDescriptionColumn = "description"
+)
+
 func (s *datastore) Category(ctx context.Context, id string) (model.Category, error) {
 	var category model.Category
 	err := s.db.WithContext(ctx).First(&category, "id = ?", id).Error
@@ -34,8 +42,8 @@ func (s *datastore) CatalogProduct(ctx context.Context, id string) (model.Produc
 	var product model.Product
 	db := s.db.WithContext(ctx)
 	err := db.Model(&model.Product{}).
-		Where("id = ? AND status = ? AND shop_id IN (?)", id, "approved",
-			db.Model(&model.Shop{}).Select("id").Where("status = ?", "approved")).
+		Where(productCatalogIDColumn+" = ? AND "+productCatalogStatusColumn+" = ? AND "+productCatalogShopColumn+" IN (?)", id, model.ProductStatusApproved,
+			db.Model(&model.Shop{}).Select(productCatalogIDColumn).Where(productCatalogStatusColumn+" = ?", model.ShopStatusApproved)).
 		First(&product).Error
 	return product, normalizeError(err)
 }
@@ -56,8 +64,8 @@ func (s *datastore) ListProducts(
 	if filter.Catalog {
 		q = q.Where(
 			"status = ? AND shop_id IN (?)",
-			"approved",
-			db.Model(&model.Shop{}).Select("id").Where("status = ?", "approved"),
+			model.ProductStatusApproved,
+			db.Model(&model.Shop{}).Select(productCatalogIDColumn).Where(productCatalogStatusColumn+" = ?", model.ShopStatusApproved),
 		)
 	}
 	if filter.OwnerID != "" {
@@ -70,11 +78,11 @@ func (s *datastore) ListProducts(
 		keywords := strings.Fields(strings.TrimSpace(filter.Keyword))
 		for _, keyword := range keywords {
 			pattern := "%" + keyword + "%"
-			q = q.Where("(name LIKE ? OR description LIKE ?)", pattern, pattern)
+			q = q.Where("("+productSearchNameColumn+" LIKE ? OR "+productSearchDescriptionColumn+" LIKE ?)", pattern, pattern)
 		}
 		// Match all tokens; order name matches ahead of description-only matches.
 		q = q.Clauses(clause.OrderBy{Expression: clause.Expr{
-			SQL: "CASE WHEN name LIKE ? THEN 0 ELSE 1 END", Vars: []any{"%" + strings.TrimSpace(filter.Keyword) + "%"},
+			SQL: "CASE WHEN " + productSearchNameColumn + " LIKE ? THEN 0 ELSE 1 END", Vars: []any{"%" + strings.TrimSpace(filter.Keyword) + "%"},
 		}})
 	}
 	if filter.Status != "" {

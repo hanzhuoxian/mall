@@ -9,7 +9,7 @@ import (
 
 // CreateAddress 创建属于当前用户的收货地址。
 func (s *Service) CreateAddress(ctx context.Context, actor model.Actor, in model.Address) (model.Address, error) {
-	if !validText(in.Recipient, 100) || !validText(in.Phone, 30) || !validText(in.Detail, 500) {
+	if !validText(in.Recipient, model.MaxEntityNameLength) || !validText(in.Phone, model.MaxPhoneLength) || !validText(in.Detail, model.MaxAddressDetailLength) {
 		return model.Address{}, ErrInvalid
 	}
 	in.Base, in.UserID = base(), actor.ID
@@ -24,14 +24,14 @@ func (s *Service) DeleteAddress(ctx context.Context, actor model.Actor, id strin
 
 // PutCart 校验商品及数量后更新当前用户购物车。
 func (s *Service) PutCart(ctx context.Context, actor model.Actor, in model.CartItem) error {
-	if in.Quantity < 1 || in.Quantity > 999 {
+	if in.Quantity < 1 || in.Quantity > model.MaxCartQuantity {
 		return ErrInvalid
 	}
 	product, err := s.store.Product(ctx, in.ProductID, false)
 	if err != nil {
 		return err
 	}
-	if product.Status != "approved" {
+	if product.Status != model.ProductStatusApproved {
 		return store.ErrNotFound
 	}
 	if product.Stock < in.Quantity {
