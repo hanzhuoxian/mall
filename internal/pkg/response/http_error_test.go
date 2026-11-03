@@ -31,6 +31,7 @@ func TestFailAdaptsHTTPAndGRPCErrors(t *testing.T) {
 		t.Run(tc.message, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
 			Fail(c, tc.err)
 			var body Response
 			if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {

@@ -138,7 +138,7 @@ func authenticator(
 				if count == 1 {
 					rdb.Expire(ctx, failKey, loginFailExpiry)
 				}
-				logAuthError(login.Identifier, authErr)
+				logAuthError(c.Request.Context(), login.Identifier, authErr)
 				return "", errors.New(coder.ErrPasswordIncorrect, "password incorrect")
 			}
 			// 登录成功，清除失败计数
@@ -151,7 +151,7 @@ func authenticator(
 			Password:   login.Password,
 		})
 		if err != nil {
-			logAuthError(login.Identifier, err)
+			logAuthError(c.Request.Context(), login.Identifier, err)
 			return "", errors.New(coder.ErrPasswordIncorrect, "password incorrect")
 		}
 		return resp.InstanceId, nil
@@ -170,21 +170,21 @@ func payload() func(data any) jwtv5.MapClaims {
 func parseWithHeader(c *gin.Context) (loginInfo, error) {
 	auth := strings.SplitN(c.Request.Header.Get("Authorization"), " ", 2)
 	if len(auth) != 2 || auth[0] != "Basic" {
-		logger.Errorf("get basic string from Authorization header failed")
+		logger.L(c.Request.Context()).Sugar().Errorf("get basic string from Authorization header failed")
 
 		return loginInfo{}, jwt.ErrFailedAuthentication
 	}
 
 	payload, err := base64.StdEncoding.DecodeString(auth[1])
 	if err != nil {
-		logger.Errorf("decode basic string: %s", err.Error())
+		logger.L(c.Request.Context()).Sugar().Errorf("decode basic string: %s", err.Error())
 
 		return loginInfo{}, jwt.ErrFailedAuthentication
 	}
 
 	pair := strings.SplitN(string(payload), ":", 2)
 	if len(pair) != 2 {
-		logger.Errorf("parse payload failed")
+		logger.L(c.Request.Context()).Sugar().Errorf("parse payload failed")
 
 		return loginInfo{}, jwt.ErrFailedAuthentication
 	}
@@ -198,7 +198,7 @@ func parseWithHeader(c *gin.Context) (loginInfo, error) {
 func parseWithBody(c *gin.Context) (loginInfo, error) {
 	var login loginInfo
 	if err := c.ShouldBindJSON(&login); err != nil {
-		logger.Errorf("parse login parameters: %s", err.Error())
+		logger.L(c.Request.Context()).Sugar().Errorf("parse login parameters: %s", err.Error())
 
 		return loginInfo{}, jwt.ErrFailedAuthentication
 	}
@@ -208,12 +208,12 @@ func parseWithBody(c *gin.Context) (loginInfo, error) {
 
 // logAuthError logs auth failures at WARN for expected cases (user not found,
 // wrong password) and ERROR for unexpected internal failures.
-func logAuthError(identifier string, err error) {
+func logAuthError(ctx context.Context, identifier string, err error) {
 	st, _ := status.FromError(err)
 	switch st.Code() {
 	case codes.NotFound, codes.Unauthenticated:
-		logger.Warnf("authenticate user %q failed: %s", identifier, st.Message())
+		logger.L(ctx).Sugar().Warnf("authenticate user %q failed: %s", identifier, st.Message())
 	default:
-		logger.Errorf("authenticate user %q failed: %v", identifier, err)
+		logger.L(ctx).Sugar().Errorf("authenticate user %q failed: %v", identifier, err)
 	}
 }

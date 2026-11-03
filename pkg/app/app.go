@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 
-	"github.com/hanzhuoxian/mall/pkg/logger"
 	"github.com/hanzhuoxian/mall/pkg/nflag"
 	"github.com/hanzhuoxian/mall/pkg/term"
 	"github.com/hanzhuoxian/mall/pkg/version"
@@ -130,7 +130,6 @@ func NewApp(name string, basename string, opts ...Option) *App {
 
 // buildCommand 根据 App 配置组装 cobra.Command，注册子命令、flag 分组、版本和配置 flag。
 func (app *App) buildCommand() {
-	printWorkingDir()
 	basename := FormatBaseName(app.basename)
 	cmd := cobra.Command{
 		Use:           basename,
@@ -179,10 +178,10 @@ func (app *App) buildCommand() {
 	app.cmd = &cmd
 }
 
-// printWorkingDir 在启动时打印当前工作目录，便于排查路径相关问题。
-func printWorkingDir() {
+// PrintWorkingDir 在日志初始化后打印工作目录，便于排查路径相关问题。
+func PrintWorkingDir() {
 	wd, _ := os.Getwd()
-	logger.Infof("%v WorkingDir: %s", progressMessage, wd)
+	zap.S().Infof("%v WorkingDir: %s", progressMessage, wd)
 }
 
 // Command returns cobra command instance inside the application.

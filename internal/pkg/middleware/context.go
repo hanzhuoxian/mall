@@ -5,16 +5,22 @@ package middleware
 import (
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"github.com/hanzhuoxian/mall/pkg/logger"
 )
 
-// Context 返回一个中间件，将 requestID 和 username 注入到 gin.Context 中，
-// 便于后续处理器通过 logger.L(ctx) 自动携带这些字段输出结构化日志。
+// Context 将请求元信息放入标准 context，供 HTTP、服务层和数据库日志共享。
 func Context() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set(logger.KeyRequestID, requestid.Get(c))
-		c.Set(logger.KeyUsername, c.GetString(logger.KeyUsername))
+		id := requestid.Get(c)
+		c.Set(logger.KeyRequestID, id)
+		fields := []zap.Field{zap.String(logger.KeyRequestID, id)}
+		if username := c.GetString(logger.KeyUsername); username != "" {
+			fields = append(fields, zap.String(logger.KeyUsername, username))
+		}
+		ctx := logger.WithFields(c.Request.Context(), fields...)
+		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
 }

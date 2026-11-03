@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/hanzhuoxian/mall/internal/userserver/config"
 	"github.com/hanzhuoxian/mall/internal/userserver/options"
 	"github.com/hanzhuoxian/mall/pkg/app"
@@ -45,8 +47,11 @@ func run(opts *options.Options) app.RunFunc {
 			_ = tp.Shutdown(ctx)
 		}()
 
-		logger.Init(opts.LogOptions)
-		defer logger.Flush()
+		if err := logger.Init(opts.LogOptions); err != nil {
+			return err
+		}
+		defer func() { _ = zap.L().Sync() }()
+		app.PrintWorkingDir()
 
 		cfg := config.CreateConfigFromOptions(opts)
 		return Run(cfg)

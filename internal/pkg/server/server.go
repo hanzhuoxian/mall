@@ -12,10 +12,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
-	"github.com/hanzhuoxian/mall/pkg/logger"
 	"github.com/hanzhuoxian/mall/pkg/version"
 )
 
@@ -174,13 +174,13 @@ func (s *APIServer) Close() {
 
 	if s.secureServer != nil {
 		if err := s.secureServer.Shutdown(ctx); err != nil {
-			logger.Warnf("Shutdown secure server failed: %s", err.Error())
+			zap.S().Warnf("Shutdown secure server failed: %s", err.Error())
 		}
 	}
 
 	if s.insecureServer != nil {
 		if err := s.insecureServer.Shutdown(ctx); err != nil {
-			logger.Warnf("Shutdown insecure server failed: %s", err.Error())
+			zap.S().Warnf("Shutdown insecure server failed: %s", err.Error())
 		}
 	}
 }

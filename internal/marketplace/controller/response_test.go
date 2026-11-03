@@ -30,6 +30,7 @@ func TestErrorResponsesPreserveContract(t *testing.T) {
 		t.Run(tc.message, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
 			fail(c, tc.err)
 			var body struct {
 				Message string
@@ -49,6 +50,7 @@ func TestEmptySuccessIncludesNullData(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
 	respond(c, nil, nil)
 	var body map[string]json.RawMessage
 	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {

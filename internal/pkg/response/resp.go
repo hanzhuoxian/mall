@@ -51,19 +51,19 @@ func Write(c *gin.Context, err error, data any) {
 	if err != nil {
 		var httpErr *HTTPError
 		if stderrors.As(err, &httpErr) {
-			logger.Errorf("%v", err)
+			logger.L(c.Request.Context()).Sugar().Errorf("%v", err)
 			c.JSON(httpErr.Status, Response{Code: httpErr.Status, Message: httpErr.Message})
 			return
 		}
 		if st, ok := status.FromError(err); ok {
-			logger.Errorf("gRPC error: code=%s message=%s", st.Code(), st.Message())
+			logger.L(c.Request.Context()).Sugar().Errorf("gRPC error: code=%s message=%s", st.Code(), st.Message())
 			c.JSON(grpcToHTTP(st.Code()), Response{
 				Code:    int(st.Code()),
 				Message: st.Message(),
 			})
 			return
 		}
-		logger.Errorf("%v, %+v", err, err)
+		logger.L(c.Request.Context()).Sugar().Errorf("%v, %+v", err, err)
 		coder := errors.ParseCoder(err)
 		c.JSON(coder.HTTPStatus(), Response{
 			Code:      int(coder.Code()),

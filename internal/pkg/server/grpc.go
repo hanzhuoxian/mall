@@ -3,9 +3,8 @@ package server
 import (
 	"net"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
-
-	"github.com/hanzhuoxian/mall/pkg/logger"
 )
 
 // GRPCServer 封装了标准 gRPC 服务器，持有监听地址并提供统一的启停接口。
@@ -28,7 +27,7 @@ func (g *GRPCServer) Run() error {
 
 	go func() {
 		if err := g.Serve(listen); err != nil {
-			logger.Fatalf("failed to start grpc server: %s", err.Error())
+			zap.S().Fatalf("failed to start grpc server: %s", err.Error())
 		}
 	}()
 

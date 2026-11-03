@@ -26,11 +26,11 @@ type GormLogger struct {
 
 var _ gormlogger.Interface = (*GormLogger)(nil)
 
-// NewGormLogger 创建一个 GormLogger 实例，慢查询阈值默认为 200ms，忽略 RecordNotFound 错误。
-func NewGormLogger(level gormlogger.LogLevel) *GormLogger {
+// NewGormLogger 使用注入的 zap logger，慢查询阈值默认为 200ms，忽略 RecordNotFound 错误。
+func NewGormLogger(l *zap.Logger, level gormlogger.LogLevel) *GormLogger {
 	return &GormLogger{
-		logger:                    logger.ZapLogger(),
-		logLevel:                  gormlogger.LogLevel(level),
+		logger:                    l,
+		logLevel:                  level,
 		slowThreshold:             200 * time.Millisecond,
 		ignoreRecordNotFoundError: true,
 	}
@@ -46,21 +46,21 @@ func (l *GormLogger) LogMode(level gormlogger.LogLevel) gormlogger.Interface {
 // Info 在日志级别 >= Info 时输出 info 级别的 GORM 日志，实现 gormlogger.Interface。
 func (l *GormLogger) Info(ctx context.Context, msg string, data ...any) {
 	if l.logLevel >= gormlogger.Info {
-		l.logger.Sugar().Infof("[gorm] "+msg, data...)
+		logger.WithContext(ctx, l.logger).Sugar().Infof("[gorm] "+msg, data...)
 	}
 }
 
 // Warn 在日志级别 >= Warn 时输出 warn 级别的 GORM 日志，实现 gormlogger.Interface。
 func (l *GormLogger) Warn(ctx context.Context, msg string, data ...any) {
 	if l.logLevel >= gormlogger.Warn {
-		l.logger.Sugar().Warnf("[gorm] "+msg, data...)
+		logger.WithContext(ctx, l.logger).Sugar().Warnf("[gorm] "+msg, data...)
 	}
 }
 
 // Error 在日志级别 >= Error 时输出 error 级别的 GORM 日志，实现 gormlogger.Interface。
 func (l *GormLogger) Error(ctx context.Context, msg string, data ...any) {
 	if l.logLevel >= gormlogger.Error {
-		l.logger.Sugar().Errorf("[gorm] "+msg, data...)
+		logger.WithContext(ctx, l.logger).Sugar().Errorf("[gorm] "+msg, data...)
 	}
 }
 
@@ -71,16 +71,22 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 		return
 	}
 
+	log := logger.WithContext(ctx, l.logger)
 	elapsed := time.Since(begin)
-	caller := utils.FileWithLineNum()
+	// CallerFrame skips this adapter before filtering GORM's internal frames.
+	// FileWithLineNum adds another frame and would point back into this file.
+	frame := utils.CallerFrame()
+	caller := ""
+	if frame.PC != 0 {
+		caller = fmt.Sprintf("%s:%d", frame.File, frame.Line)
+	}
 
 	switch {
 	case err != nil && l.logLevel >= gormlogger.Error &&
 		(!errors.Is(err, gormlogger.ErrRecordNotFound) || !l.ignoreRecordNotFoundError):
 		sql, rows := fc()
-		l.logger.Error("[gorm] trace",
-			logger.ContextField(ctx),
-			zap.String("caller", caller),
+		log.Error("[gorm] trace",
+			zap.String("sql_caller", caller),
 			zap.Error(err),
 			zap.String("elapsed", fmt.Sprintf("%.3fms", float64(elapsed.Nanoseconds())/1e6)),
 			zap.Int64("rows", rows),
@@ -88,9 +94,8 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 		)
 	case elapsed > l.slowThreshold && l.slowThreshold > 0 && l.logLevel >= gormlogger.Warn:
 		sql, rows := fc()
-		l.logger.Warn("[gorm] slow sql",
-			logger.ContextField(ctx),
-			zap.String("caller", caller),
+		log.Warn("[gorm] slow sql",
+			zap.String("sql_caller", caller),
 			zap.String("threshold", l.slowThreshold.String()),
 			zap.String("elapsed", fmt.Sprintf("%.3fms", float64(elapsed.Nanoseconds())/1e6)),
 			zap.Int64("rows", rows),
@@ -98,9 +103,8 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 		)
 	case l.logLevel >= gormlogger.Info:
 		sql, rows := fc()
-		l.logger.Info("[gorm] trace",
-			logger.ContextField(ctx),
-			zap.String("caller", caller),
+		log.Info("[gorm] trace",
+			zap.String("sql_caller", caller),
 			zap.String("elapsed", fmt.Sprintf("%.3fms", float64(elapsed.Nanoseconds())/1e6)),
 			zap.Int64("rows", rows),
 			zap.String("sql", sql),

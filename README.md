@@ -67,6 +67,25 @@ npm run dev
 
 关闭 `--sandbox-payment` 后不能模拟付款/退款，系统也不会假称真实支付成功。发布模式显式使用 `--server.mode=release`，该模式拒绝开启沙箱支付。
 
+## 日志开发约定
+
+`pkg/logger` 负责 zap 配置、初始化和请求上下文关联，业务日志直接使用 zap API：
+
+```go
+// 服务启动时：先初始化 telemetry，再初始化日志；退出时同步日志。
+if err := logger.Init(logOptions); err != nil {
+    return err
+}
+defer func() { _ = zap.L().Sync() }()
+
+zap.L().Info("server started", zap.String("address", address))
+logger.L(ctx).Info("request handled", zap.String("operation", operation))
+```
+
+HTTP 处理中使用 `c.Request.Context()`；自定义请求字段通过 `logger.WithFields(ctx, zap.String(...))` 传递。`logger.L(ctx)` 返回原生 `*zap.Logger`，同时关联本地日志和 OTLP 的 trace/span ID。GORM 适配器通过 `NewGormLogger(zapLogger, level)` 显式接收 logger。
+
+`logger.Init` 安装 `zap.L()`、`zap.S()` 和标准库 `log` 的全局输出；需要独立实例时使用无全局副作用的 `logger.New`。原有 `log.*` 配置保留，本地与 OTLP 共用日志级别和采样策略：每秒相同级别、相同消息保留前 100 条，此后每 100 条保留 1 条。
+
 ## 自动验证
 
 ```sh

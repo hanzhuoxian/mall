@@ -4,12 +4,13 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/hanzhuoxian/mall/internal/apiserver/controller"
 	marketservice "github.com/hanzhuoxian/mall/internal/marketplace/service"
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware"
 	"github.com/hanzhuoxian/mall/internal/pkg/middleware/auth"
 	"github.com/hanzhuoxian/mall/internal/pkg/server"
-	"github.com/hanzhuoxian/mall/pkg/logger"
 	"github.com/hanzhuoxian/mall/pkg/shutdown"
 )
 
@@ -59,7 +60,7 @@ func (a *apiserver) PrepareRun() *preparedApiServer {
 				return
 			case <-ticker.C:
 				if err := a.marketplace.ExpireOrders(ctx); err != nil && ctx.Err() == nil {
-					logger.Errorf("expire orders: %v", err)
+					zap.S().Errorf("expire orders: %v", err)
 				}
 			}
 		}

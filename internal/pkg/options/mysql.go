@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
@@ -82,7 +83,7 @@ func (o *MySQLOptions) NewClient() (*gorm.DB, error) {
 			MaxOpenConnections:    o.MaxOpenConnections,
 			MaxConnectionLifeTime: o.MaxConnectionLifeTime,
 			LogLevel:              o.LogLevel,
-			Logger:                logger.NewGormLogger(gormlogger.LogLevel(o.LogLevel)),
+			Logger:                logger.NewGormLogger(zap.L(), gormlogger.LogLevel(o.LogLevel)),
 		},
 	}
 

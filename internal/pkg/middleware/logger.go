@@ -115,7 +115,7 @@ func LoggerWithConfig(conf gin.LoggerConfig) gin.HandlerFunc {
 
 			param.Path = path
 
-			logger.L(c).Info(formatter(param))
+			logger.L(c.Request.Context()).Info(formatter(param))
 		}
 	}
 }

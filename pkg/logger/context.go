@@ -1,33 +1,54 @@
 package logger
 
-import "context"
+import (
+	"context"
 
-// key 是 context 存储 logger 的私有键类型，防止与其他包的 key 冲突。
-type key int
-
-const (
-	logContextKey key = iota // logContextKey 是存储 Logger 实例的 context key。
+	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-// WithContext 将当前 logger 存入 context 并返回新 context，便于跨层传递。
-func (l *zapLogger) WithContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, logContextKey, l)
-}
+// Common structured log field names.
+const (
+	KeyRequestID = "requestID"
+	KeyUsername  = "username"
+	KeyTraceID   = "trace_id"
+	KeySpanID    = "span_id"
+)
 
-// WithContext 将全局 logger 存入 context，是包级别的快捷方式。
-func WithContext(ctx context.Context) context.Context {
-	return std.WithContext(ctx)
-}
+type fieldsKey struct{}
 
-// FromContext 从 context 中取出 Logger；若未设置，返回名为 "Unknown-Context" 的 logger
-// 以保证调用方始终拿到有效的 Logger，不会触发 nil panic。
-func FromContext(ctx context.Context) Logger {
-	if ctx != nil {
-		logger := ctx.Value(logContextKey)
-		if logger != nil {
-			return logger.(Logger)
-		}
+// WithFields adds request metadata to a standard context, preserving parent fields.
+func WithFields(ctx context.Context, fields ...zap.Field) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
 	}
+	parent, _ := ctx.Value(fieldsKey{}).([]zap.Field)
+	combined := make([]zap.Field, 0, len(parent)+len(fields))
+	combined = append(combined, parent...)
+	combined = append(combined, fields...)
+	return context.WithValue(ctx, fieldsKey{}, combined)
+}
 
-	return WithName("Unknown-Context")
+// L returns the global zap logger enriched with request metadata and the current span.
+func L(ctx context.Context) *zap.Logger {
+	return WithContext(ctx, zap.L())
+}
+
+// WithContext enriches an injected logger. Context is passed to otelzap as a skip
+// field for native OTLP trace correlation, and IDs are also included in local output.
+func WithContext(ctx context.Context, l *zap.Logger) *zap.Logger {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	stored, _ := ctx.Value(fieldsKey{}).([]zap.Field)
+	fields := make([]zap.Field, 0, len(stored)+3)
+	fields = append(fields, stored...)
+	fields = append(fields, zap.Field{Type: zapcore.SkipType, Interface: ctx})
+	if sc := trace.SpanContextFromContext(ctx); sc.IsValid() {
+		fields = append(fields,
+			zap.String(KeyTraceID, sc.TraceID().String()),
+			zap.String(KeySpanID, sc.SpanID().String()))
+	}
+	return l.With(fields...)
 }
